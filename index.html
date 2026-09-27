@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>4つの尺度</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <h1>4つの尺度</h1>
+    <p class="lead">名義・順序・間隔・比例を、3つのモードで身につける。</p>
+  </header>
+
+  <main id="app">
+    <nav class="mode-list" aria-label="モード選択">
+      <button class="mode" data-mode="flow">
+        <span class="step">STEP 1</span>
+        <span class="title">フローチャートで考える</span>
+        <span class="desc">3つの問いに答えて、尺度にたどり着く。</span>
+      </button>
+      <button class="mode" data-mode="quiz">
+        <span class="step">STEP 2</span>
+        <span class="title">4択クイズで確かめる</span>
+        <span class="desc">1問ずつ答えて、すぐに解説を読む。</span>
+      </button>
+      <button class="mode" data-mode="sort">
+        <span class="step">STEP 3</span>
+        <span class="title">60秒仕分けチャレンジ</span>
+        <span class="desc">流れてくる項目を4つの箱に振り分けて、スコアと判定を競う。</span>
+      </button>
+    </nav>
+    <section id="screen" hidden></section>
+  </main>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

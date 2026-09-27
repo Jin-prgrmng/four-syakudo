@@ -1,0 +1,10 @@
+{
+  "name": "four-syakudo",
+  "private": true,
+  "type": "module",
+  "description": "4つの尺度（名義・順序・間隔・比例）を学ぶ授業用ゲーム",
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "test": "node --test tests/*.test.js"
+  }
+}

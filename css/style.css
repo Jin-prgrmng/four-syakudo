@@ -1,0 +1,48 @@
+:root {
+  --bg: #f7f6f2;
+  --surface: #ffffff;
+  --text: #1d1d1f;
+  --muted: #5f5f66;
+  --border: #d9d7cf;
+  --accent: #2f5d8a;
+  /* 尺度ごとの色（仕分けの箱や解説で共通に使う） */
+  --nominal: #7a5aa6;
+  --ordinal: #2f7d6d;
+  --interval: #b8742a;
+  --ratio: #b24a4a;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #17181b;
+    --surface: #212226;
+    --text: #ececef;
+    --muted: #a3a3ab;
+    --border: #3a3b41;
+    --accent: #7fb0e0;
+    --nominal: #b49ad8;
+    --ordinal: #6fc2af;
+    --interval: #e3a55f;
+    --ratio: #e38a8a;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
+  line-height: 1.7;
+}
+.site-header, main { max-width: 720px; margin: 0 auto; padding: 16px; }
+h1 { margin: 16px 0 0; font-size: 1.6rem; }
+.lead { margin: 4px 0 0; color: var(--muted); }
+.mode-list { display: grid; gap: 12px; }
+.mode {
+  display: grid; gap: 2px; text-align: left; width: 100%;
+  padding: 16px; border: 1px solid var(--border); border-radius: 12px;
+  background: var(--surface); color: var(--text); font: inherit; cursor: pointer;
+}
+.mode:hover, .mode:focus-visible { border-color: var(--accent); }
+.mode .step { font-size: .8rem; color: var(--accent); letter-spacing: .08em; }
+.mode .title { font-size: 1.15rem; font-weight: 600; }
+.mode .desc { color: var(--muted); font-size: .95rem; }
