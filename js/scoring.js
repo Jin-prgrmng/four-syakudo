@@ -14,14 +14,18 @@ export const SORT_CONFIG = {
   wrongPenalty: 50,
 };
 
-// 判定（成績の段階）。上から順に、score と accuracy の両方を満たした最初の段階になる。
+// 称号。上から順に、score と accuracy の両方を満たした最初の称号になる。
 // 正答率の下限を設けて、当てずっぽうで数をこなしても上位に入れないようにする。
-export const RANKS = [
-  { id: 'S', title: '尺度マスター', minScore: 6000, minAccuracy: 0.9 },
-  { id: 'A', title: '尺度の達人', minScore: 4000, minAccuracy: 0.8 },
-  { id: 'B', title: '一人前', minScore: 2500, minAccuracy: 0.7 },
-  { id: 'C', title: '見習い', minScore: 1200, minAccuracy: 0.5 },
-  { id: 'D', title: 'もう一度フローチャートへ', minScore: -Infinity, minAccuracy: 0 },
+// 得点の目安（全問正解の場合）: 1枚2.5秒で約7600点、3秒で約5800点、4秒で約3500点、6秒で約1450点。
+export const TITLES = [
+  { id: 'kaiden', grade: '皆伝', title: 'スティーヴンスの継承者', minScore: 7500, minAccuracy: 0.95 },
+  { id: 'dan3', grade: '三段', title: '尺度の賢者', minScore: 5500, minAccuracy: 0.9 },
+  { id: 'dan1', grade: '初段', title: '比例の魔導士', minScore: 4000, minAccuracy: 0.85 },
+  { id: 'kyu2', grade: '二級', title: '間隔の騎士', minScore: 2800, minAccuracy: 0.8 },
+  { id: 'kyu4', grade: '四級', title: '順序の旅人', minScore: 1800, minAccuracy: 0.7 },
+  { id: 'kyu6', grade: '六級', title: '名義の番人', minScore: 1000, minAccuracy: 0.6 },
+  { id: 'kyu8', grade: '八級', title: '目盛り見習い', minScore: 400, minAccuracy: 0.4 },
+  { id: 'kyu10', grade: '十級', title: 'ものさし拾い', minScore: -Infinity, minAccuracy: 0 },
 ];
 
 export function speedBonus(elapsedSec, cfg = SORT_CONFIG) {
@@ -72,10 +76,10 @@ export function summarize(answers, cfg = SORT_CONFIG) {
     perMinute,
     avgSec,
     maxCombo,
-    rank: rankFor(score, accuracy),
+    title: titleFor(score, accuracy),
   };
 }
 
-export function rankFor(score, accuracy) {
-  return RANKS.find((r) => score >= r.minScore && accuracy >= r.minAccuracy);
+export function titleFor(score, accuracy) {
+  return TITLES.find((r) => score >= r.minScore && accuracy >= r.minAccuracy);
 }

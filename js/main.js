@@ -1,30 +1,111 @@
-// 画面の切り替えだけを担う入口。各モードの本体は js/modes/ に実装する予定。
-const MODES = {
-  flow: 'フローチャートで考える',
-  quiz: '4択クイズで確かめる',
-  sort: '60秒仕分けチャレンジ',
+// 入口。問題データと記録を読み込み、画面を切り替える。
+import { SCALES, SCALE_IDS, FLOW_STEPS } from './scales.js';
+import { createHistory } from './history.js';
+import { loadSettings, saveSettings, applySettings, SETTING_OPTIONS } from './settings.js';
+import { h, win, menu, button, scaleLabel, enableArrowKeys } from './ui.js';
+import { memorin } from './sprites.js';
+import { startFlow } from './modes/flow.js';
+import { startQuiz } from './modes/quiz.js';
+import { startSort } from './modes/sort.js';
+import { startLog } from './modes/log.js';
+
+const root = document.getElementById('app');
+const settings = loadSettings();
+applySettings(settings);
+
+let cleanup = null;
+
+// 各画面は (ctx, params) を受け取って root に描画し、必要なら後片付けの関数を返す。
+const SCREENS = {
+  title: showTitle,
+  flow: startFlow,
+  quiz: startQuiz,
+  sort: startSort,
+  log: startLog,
+  guide: showGuide,
+  settings: showSettings,
 };
 
-async function loadItems() {
-  const res = await fetch('data/items.json');
-  if (!res.ok) throw new Error(`問題データを読み込めない: ${res.status}`);
-  return (await res.json()).items;
+function go(name, params = {}) {
+  if (cleanup) cleanup();
+  cleanup = null;
+  root.replaceChildren();
+  window.scrollTo(0, 0);
+  cleanup = SCREENS[name](ctx, params) ?? null;
+  // 画面が変わったら最初のボタンにフォーカスを移し、キーボードだけでも操作できるようにする
+  const first = root.querySelector('[data-autofocus], .menu button, .btn');
+  first?.focus({ preventScroll: true });
 }
 
-function showPlaceholder(mode) {
-  const screen = document.getElementById('screen');
-  screen.hidden = false;
-  screen.innerHTML = `<p>「${MODES[mode]}」は未実装。</p>`;
+const ctx = { root, go, settings, history: createHistory(), items: [], itemsById: new Map() };
+
+function showTitle({ root, history }) {
+  const best = history.best('sort');
+  const m = menu([
+    ['フローチャートで考える', 'STEP 1　3つの問いで尺度にたどり着く', () => go('flow')],
+    ['4択クイズで確かめる', 'STEP 2　1問ずつ答えて解説を読む', () => go('quiz')],
+    ['60秒仕分けチャレンジ', `STEP 3　スコアと称号をねらう${best ? `（自己ベスト ${best}）` : ''}`, () => go('sort')],
+    ['冒険の記録', 'これまでの成績と、苦手な項目の復習', () => go('log')],
+    ['尺度の図鑑', '4つの尺度のちがいを見なおす', () => go('guide')],
+    ['設定', '文字・速さ・演出', () => go('settings')],
+  ]);
+  enableArrowKeys(m);
+  root.append(
+    h('div', { class: 'title-screen' },
+      memorin(),
+      h('h1', { class: 'logo' }, '4つの尺度', h('small', {}, '― メモリンと ものさしの冒険 ―')),
+      h('div', { class: 'scale-row', 'aria-hidden': 'true' }, SCALE_IDS.map((id) => scaleLabel(id, { short: true })))),
+    win('メニュー', m));
+}
+
+function showGuide({ root }) {
+  root.append(
+    h('h1', { class: 'head' }, '尺度の図鑑'),
+    ...SCALE_IDS.map((id) => {
+      const s = SCALES[id];
+      return win(null,
+        h('h2', {}, scaleLabel(id)),
+        h('p', {}, s.summary),
+        h('p', { class: 'small' }, `${s.kind}　できる計算：${s.operations}`),
+        s.alias ? h('p', { class: 'small' }, `「${s.alias}」と呼ぶ本もある。`) : null);
+    }),
+    win('見分け方',
+      h('ol', {}, FLOW_STEPS.map((st) =>
+        h('li', {}, st.question, h('br'), h('span', { class: 'small' }, 'いいえ → '), scaleLabel(st.ifNo)))),
+      h('p', {}, '3つとも「はい」なら ', scaleLabel('ratio'), '。')),
+    h('div', { class: 'btn-row' }, button('メニューにもどる', () => go('title'))));
+}
+
+function showSettings({ root, settings }) {
+  const body = h('div');
+  const render = () => {
+    body.replaceChildren(
+      ...Object.entries(SETTING_OPTIONS).map(([key, def]) =>
+        h('div', { class: 'setting', role: 'group', 'aria-label': def.label },
+          h('p', { class: 'head' }, def.label),
+          h('div', { class: 'opts' }, def.options.map(([value, label]) =>
+            h('button', {
+              type: 'button',
+              'aria-pressed': String(settings[key] === value),
+              onclick: () => { settings[key] = value; saveSettings(settings); render(); },
+            }, label))))));
+  };
+  render();
+  root.append(
+    h('h1', { class: 'head' }, '設定'),
+    win(null, body,
+      h('p', { class: 'small' }, '本文はいつも読みやすい UD フォントで表示する。ドット文字が読みにくいときは、見出しも UD フォントに切り替えられる。')),
+    h('div', { class: 'btn-row' }, button('メニューにもどる', () => go('title'))));
 }
 
 async function init() {
-  const items = await loadItems();
-  console.info(`問題データ ${items.length} 件を読み込んだ`);
-  for (const btn of document.querySelectorAll('.mode')) {
-    btn.addEventListener('click', () => showPlaceholder(btn.dataset.mode));
-  }
+  const res = await fetch('data/items.json');
+  if (!res.ok) throw new Error(`問題データを読み込めなかった（${res.status}）`);
+  ctx.items = (await res.json()).items;
+  ctx.itemsById = new Map(ctx.items.map((i) => [i.id, i]));
+  go('title');
 }
 
 init().catch((err) => {
-  document.getElementById('app').textContent = err.message;
+  root.replaceChildren(win('エラー', h('p', {}, err.message), h('p', { class: 'small' }, 'ページを読み込みなおしてほしい。')));
 });

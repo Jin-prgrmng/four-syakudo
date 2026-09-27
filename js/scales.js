@@ -4,6 +4,8 @@
 export const SCALES = {
   nominal: {
     id: 'nominal',
+    // 色だけに頼らず区別できるよう、尺度ごとに形の記号を付ける
+    mark: '●',
     name: '名義尺度',
     short: '名義',
     kind: '質的データ',
@@ -12,6 +14,7 @@ export const SCALES = {
   },
   ordinal: {
     id: 'ordinal',
+    mark: '▲',
     name: '順序尺度',
     short: '順序',
     kind: '質的データ',
@@ -20,6 +23,7 @@ export const SCALES = {
   },
   interval: {
     id: 'interval',
+    mark: '■',
     name: '間隔尺度',
     short: '間隔',
     kind: '量的データ',
@@ -28,7 +32,9 @@ export const SCALES = {
   },
   ratio: {
     id: 'ratio',
+    mark: '★',
     name: '比例尺度',
+    alias: '比率尺度',
     short: '比例',
     kind: '量的データ',
     summary: '0 が「何もない」ことを表すので、「何倍」という比べ方ができる。',
@@ -42,18 +48,21 @@ export const SCALE_IDS = ['nominal', 'ordinal', 'interval', 'ratio'];
 export const FLOW_STEPS = [
   {
     key: 'order',
+    short: '並べる意味',
     question: '値を小さい順・大きい順に並べることに意味はあるか。',
     hint: '数字で書かれていても、ただの名前（番号）なら並べる意味はない。',
     ifNo: 'nominal',
   },
   {
     key: 'equalInterval',
+    short: '間隔が等しい',
     question: '値と値の差（間隔）は、どこでも同じ大きさを表しているか。',
     hint: '1位と2位の差と、2位と3位の差は同じとは限らない。',
     ifNo: 'ordinal',
   },
   {
     key: 'trueZero',
+    short: '0 が「ない」を表す',
     question: '0 は「まったくない」ことを表し、「2倍」「半分」と言えるか。',
     hint: '0℃ は「温度がない」ことではない。0 kg は「重さがない」ことを表す。',
     ifNo: 'interval',
@@ -77,4 +86,12 @@ export function answersForScale(scaleId) {
     equalInterval: rank >= 2,
     trueZero: rank >= 3,
   };
+}
+
+// 誤答したとき、フローチャートのどの問いで判断が分かれたかを返す。一致すれば null。
+export function divergingStep(chosenId, correctId) {
+  const chosen = answersForScale(chosenId);
+  const correct = answersForScale(correctId);
+  const step = FLOW_STEPS.find((s) => chosen[s.key] !== correct[s.key]);
+  return step ? { step, chosen: chosen[step.key], correct: correct[step.key] } : null;
 }

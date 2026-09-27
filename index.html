@@ -3,36 +3,19 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>4つの尺度</title>
+  <meta name="theme-color" content="#0b0f1e">
+  <title>4つの尺度 ― メモリンと ものさしの冒険</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Crect width='8' height='8' fill='%23f0e442'/%3E%3Crect x='1' y='1' width='3' height='1' fill='%231b1b2f'/%3E%3Crect x='1' y='3' width='4' height='1' fill='%231b1b2f'/%3E%3Crect x='1' y='5' width='3' height='1' fill='%231b1b2f'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=DotGothic16&display=swap">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <header class="site-header">
-    <h1>4つの尺度</h1>
-    <p class="lead">名義・順序・間隔・比例を、3つのモードで身につける。</p>
-  </header>
-
-  <main id="app">
-    <nav class="mode-list" aria-label="モード選択">
-      <button class="mode" data-mode="flow">
-        <span class="step">STEP 1</span>
-        <span class="title">フローチャートで考える</span>
-        <span class="desc">3つの問いに答えて、尺度にたどり着く。</span>
-      </button>
-      <button class="mode" data-mode="quiz">
-        <span class="step">STEP 2</span>
-        <span class="title">4択クイズで確かめる</span>
-        <span class="desc">1問ずつ答えて、すぐに解説を読む。</span>
-      </button>
-      <button class="mode" data-mode="sort">
-        <span class="step">STEP 3</span>
-        <span class="title">60秒仕分けチャレンジ</span>
-        <span class="desc">流れてくる項目を4つの箱に振り分けて、スコアと判定を競う。</span>
-      </button>
-    </nav>
-    <section id="screen" hidden></section>
+  <main id="app" aria-live="off">
+    <p>読み込み中…</p>
   </main>
-
+  <noscript><p style="padding:16px">このゲームを遊ぶには JavaScript を有効にしてほしい。</p></noscript>
   <script type="module" src="js/main.js"></script>
 </body>
 </html>
