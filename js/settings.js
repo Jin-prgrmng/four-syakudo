@@ -34,5 +34,5 @@ export function applySettings(settings) {
   root.dataset.font = settings.font;
   root.dataset.size = settings.size;
   root.dataset.motion = settings.motion;
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', settings.palette === 'gb' ? '#8bac0f' : '#0b0f1e');
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', settings.palette === 'gb' ? '#a0a088' : '#0b0f1e');
 }
