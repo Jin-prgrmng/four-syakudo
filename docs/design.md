@@ -135,11 +135,14 @@ localStorage の記録は端末とブラウザごとに残るため、別の端�
 
 HTML・CSS・JavaScript（ES Modules）だけで構成し、外部ライブラリは使わない。フォントだけは Google Fonts から読み込み、読み込めない環境では端末に入っているゴシック体で表示する。ドラッグ操作は Pointer Events で実装し、マウスとタッチを同じコードで扱う。
 
+GitHub Pages はファイルをブラウザに最大10分保存させるため、更新直後に再読み込みすると、HTML だけが新しく、JavaScript や CSS は古いまま、という状態が起こる。これを防ぐため、index.html の中で CSS・JavaScript・問題データのすべてに `?v=バージョン番号` を付けて読み込む。JavaScript どうしの import は、index.html の import map で `?v=` 付きの URL に置き換える。index.html は再読み込みのたびに取り直されるので、バージョン番号が変われば、ほかのファイルも必ず最新になる。バージョン番号は push の前に `npm run bump`（`tools/bump-version.mjs`）で更新し、`tests/version.test.js` が付け忘れを検査する。
+
 開発時の確認方法は次のとおりである。`fetch` で JSON を読み込むため、index.html をファイルとして直接開くと動かない。
 
 ```
 npm start   # python3 -m http.server 8000 で http://localhost:8000 を開く
 npm test    # Node.js 標準のテストランナーで、問題データとロジックを検査する
+npm run bump  # push の前に、index.html のバージョン番号を更新する
 ```
 
 ## ディレクトリ構成

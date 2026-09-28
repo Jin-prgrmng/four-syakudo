@@ -130,7 +130,9 @@ function showSettings({ root, settings }) {
 }
 
 async function init() {
-  const res = await fetch('data/items.json');
+  // index.html が付けたバージョン番号を問題データにも付け、古いデータが使われないようにする
+  const version = new URL(import.meta.url).searchParams.get('v') ?? '';
+  const res = await fetch(`data/items.json?v=${version}`);
   if (!res.ok) throw new Error(`問題データを読み込めなかった（${res.status}）`);
   ctx.items = (await res.json()).items;
   ctx.itemsById = new Map(ctx.items.map((i) => [i.id, i]));
