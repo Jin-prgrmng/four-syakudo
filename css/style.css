@@ -147,14 +147,9 @@ p { margin: 0 0 .5em; }
 .hint { border-left: 4px solid var(--fg-dim); padding-left: 10px; font-size: .92rem; }
 
 /* フローチャートモード */
-.steps { display: flex; justify-content: center; gap: 6px; margin: 0 0 8px; font-size: .78rem; font-family: var(--font-head); }
-.steps span { white-space: nowrap; padding: 0 10px; border: 2px solid var(--fg-dim); border-radius: 12px; color: var(--fg-dim); }
-.steps span.now { border-color: var(--fg); color: var(--bg); background: var(--fg); }
-.steps span.done { border-style: dashed; }
-.q-main { font-family: var(--font-head); font-size: 1.15rem; line-height: 1.5; margin: 0 0 8px; }
-.examples { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 0 10px; font-size: .8rem; line-height: 1.5; }
-.examples div { border: 2px dashed var(--fg-dim); border-radius: 6px; padding: 6px 8px; }
-.examples b { display: block; font-family: var(--font-head); font-weight: 400; }
+.q-main { font-family: var(--font-head); font-size: 1.2rem; line-height: 1.5; margin: 0 0 8px; }
+.ex-line { font-size: .82rem; color: var(--fg-dim); margin: 0 0 2px; }
+.ex-line:last-of-type { margin-bottom: 12px; }
 .yesno { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .yesno .btn { justify-content: center; border-color: var(--fg); font-size: 1.1rem; }
 .yesno .btn::before { display: none; }

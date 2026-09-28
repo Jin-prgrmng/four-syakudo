@@ -1,6 +1,6 @@
-// STEP 1 フローチャートモード。項目ごとに3つの問いへ順に答え、尺度にたどり着く。
+// STEP 1 フローチャートモード。項目ごとに3つの問いへ順に答え、最後に尺度を自分で選ぶ。
 // メモリンが例の値を使って考え方を促し、まちがえたときは答えの向きに合わせたヒントを出す。
-import { FLOW_STEPS, SCALE_IDS, answersForScale, thinkPrompt } from '../scales.js';
+import { FLOW_STEPS, SCALE_IDS, SCALES, PICK_HINT, answersForScale, thinkPrompt } from '../scales.js';
 import { shuffle } from '../pick.js';
 import { h, win, button, scaleLabel, messageWindow, verdict, mount } from '../ui.js';
 
@@ -25,37 +25,29 @@ export function startFlow(ctx) {
   function playItem(index) {
     const item = items[index];
     const correctAnswers = answersForScale(item.scale);
-    const given = {};
+    const path = [];
     let stepIndex = 0;
     let mistakes = 0;
     let missesHere = 0;
+    let firstPick = null;
 
     const card = win(null,
       h('div', { class: 'card' },
-        h('p', { class: 'qno' }, `STEP 1 フローチャート　項目 ${index + 1} / ${items.length}`),
+        h('p', { class: 'qno' }, `フローチャート　項目 ${index + 1} / ${items.length}`),
         h('p', { class: 'label' }, item.label),
         h('p', { class: 'example' }, `例：${item.example}`)));
     const questionBox = h('div');
 
     mount(root, card, win(null, questionBox), memo.el);
 
-    function stepChips() {
-      return h('div', { class: 'steps', 'aria-hidden': 'true' }, FLOW_STEPS.map((st, i) => {
-        const cls = i === stepIndex ? 'now' : i < stepIndex ? 'done' : '';
-        const label = i < stepIndex ? `問い${i + 1} ${yn(given[st.key])}` : `問い${i + 1}`;
-        return h('span', { class: cls }, label);
-      }));
-    }
-
     function renderQuestion() {
       const step = FLOW_STEPS[stepIndex];
       missesHere = 0;
       questionBox.replaceChildren(
-        stepChips(),
-        h('p', { class: 'q-main' }, h('span', { class: 'sr-only' }, `問い ${stepIndex + 1}。`), step.question),
-        h('div', { class: 'examples' },
-          h('div', {}, h('b', {}, `「はい」の例：${step.yesExample.label}`), step.yesExample.text),
-          h('div', {}, h('b', {}, `「いいえ」の例：${step.noExample.label}`), step.noExample.text)),
+        h('p', { class: 'qno' }, `問い ${stepIndex + 1} / ${FLOW_STEPS.length}`),
+        h('p', { class: 'q-main' }, step.question),
+        h('p', { class: 'ex-line' }, `はい の例　${step.yesExample.label}：${step.yesExample.text}`),
+        h('p', { class: 'ex-line' }, `いいえの例　${step.noExample.label}：${step.noExample.text}`),
         h('div', { class: 'yesno' },
           button('はい', () => answer(true)),
           button('いいえ', () => answer(false))));
@@ -69,35 +61,55 @@ export function startFlow(ctx) {
         mistakes += 1;
         missesHere += 1;
         const hint = right ? step.wrongHint.whenYes : step.wrongHint.whenNo;
-        if (missesHere === 1) {
-          memo.say(verdict('×', 'おしい！'), hint);
-        } else {
-          memo.say(verdict('×', `答えは「${yn(right)}」だよ。`), hint);
-        }
+        if (missesHere === 1) memo.say(verdict('×', 'おしい！'), hint);
+        else memo.say(verdict('×', `答えは「${yn(right)}」だよ。`), hint);
         return;
       }
-      given[step.key] = yes;
-      if (!yes) return finish();
+      path.push(`問い${stepIndex + 1} ${yn(yes)}`);
       stepIndex += 1;
-      if (stepIndex === FLOW_STEPS.length) return finish();
+      if (!yes || stepIndex === FLOW_STEPS.length) return renderPick();
       memo.say(verdict('○', 'そのとおり！'), thinkPrompt(FLOW_STEPS[stepIndex], item));
       renderQuestion();
     }
 
-    function finish() {
-      answers.push({ id: item.id, scale: item.scale, chosen: null, correct: mistakes === 0 });
-      const last = index === items.length - 1;
-      stepIndex = FLOW_STEPS.length;
+    // 最後の問い: たどった答えをもとに、プレイヤーが尺度を選ぶ。
+    function renderPick() {
+      missesHere = 0;
       questionBox.replaceChildren(
-        stepChips(),
-        h('p', { class: 'found q-main' }, 'この項目は ', scaleLabel(item.scale), '！'),
+        h('p', { class: 'qno' }, '最後の問い'),
+        h('p', { class: 'q-main' }, 'では、この項目は何尺度？'),
+        h('p', { class: 'ex-line' }, `たどった答え：${path.join(' → ')}`),
+        h('div', { class: 'boxes', role: 'group', 'aria-label': '尺度を選ぶ' },
+          SCALE_IDS.map((id) => h('button', { class: 'box', type: 'button', 'data-scale': id, onclick: () => pick(id) },
+            h('span', { class: 'mark', 'aria-hidden': 'true' }, SCALES[id].mark), SCALES[id].name))));
+      questionBox.querySelector('.box').focus({ preventScroll: true });
+      memo.say(verdict('○', 'そのとおり！'), 'たどった答えから、尺度を選ぼう。');
+    }
+
+    function pick(id) {
+      firstPick ??= id;
+      if (id !== item.scale) {
+        mistakes += 1;
+        missesHere += 1;
+        if (missesHere === 1) memo.say(verdict('×', 'おしい！'), PICK_HINT.first);
+        else memo.say(verdict('×', '答えは ', scaleLabel(item.scale), ' だよ。'), PICK_HINT.second);
+        return;
+      }
+      finish();
+    }
+
+    function finish() {
+      answers.push({ id: item.id, scale: item.scale, chosen: firstPick, correct: mistakes === 0 });
+      const last = index === items.length - 1;
+      questionBox.replaceChildren(
+        h('p', { class: 'found q-main' }, scaleLabel(item.scale), ' 正解！'),
         h('div', { class: 'btn-row' }, button(last ? '結果を見る' : '次の項目へ', () => {
           memo.finish();
           if (last) showResult();
           else playItem(index + 1);
         })));
       questionBox.querySelector('.btn').focus({ preventScroll: true });
-      memo.say(mistakes === 0 ? verdict('○', '一度もまちがえずにたどり着けた！') : null, item.explanation);
+      memo.say(mistakes === 0 ? verdict('○', '一度もまちがえずに正解！') : null, item.explanation);
     }
 
     memo.say(null, thinkPrompt(FLOW_STEPS[0], item));
@@ -109,13 +121,13 @@ export function startFlow(ctx) {
     history.add({ mode: 'flow', summary: { correct: ok, total: answers.length }, answers });
     const missed = answers.filter((a) => !a.correct).map((a) => ctx.itemsById.get(a.id));
     mount(root,
-      h('h1', { class: 'head' }, 'STEP 1　結果'),
+      h('h1', { class: 'head' }, 'フローチャート　結果'),
       win(null,
-        h('p', { class: 'verdict' }, `${answers.length} 項目のうち、まちがえずにたどり着けたのは ${ok} 項目`),
+        h('p', { class: 'verdict' }, `${answers.length} 項目のうち、まちがえずに正解できたのは ${ok} 項目`),
         missed.length
           ? h('div', {}, h('p', { class: 'small' }, '途中でまちがえた項目'),
             h('ul', { class: 'review-list' }, missed.map((i) => h('li', {}, h('span', { class: 'label' }, i.label), '　', scaleLabel(i.scale)))))
-          : h('p', {}, 'すべて一度で正しくたどり着けた。4択クイズに進もう。')),
+          : h('p', {}, 'すべて一度で正解できた。4択クイズに進もう。')),
       h('div', { class: 'btn-row' },
         button('もう一度', () => go('flow')),
         button('4択クイズへ進む', () => go('quiz')),

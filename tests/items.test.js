@@ -37,3 +37,18 @@ test('仕分けモードで出題できる項目が各尺度に5問以上ある'
     assert.ok(n >= 5, `${scale}: ${n} 問しかない`);
   }
 });
+
+test('フローチャートの例とヒントに、問題の項目が出てこない', async () => {
+  const { FLOW_STEPS, PICK_HINT } = await import('../js/scales.js');
+  const texts = FLOW_STEPS.flatMap((st) => [
+    st.question, st.detail, st.yesExample.label, st.yesExample.text, st.noExample.label, st.noExample.text,
+    st.wrongHint.whenYes, st.wrongHint.whenNo,
+  ]).concat(Object.values(PICK_HINT));
+  // 「気温（摂氏 ℃）」のような項目名は、括弧の前の部分（「気温」）でも照合する
+  const names = items.flatMap((i) => [i.label, i.label.split(/[（(]/)[0]]).filter((n) => n.length >= 2);
+  for (const text of texts) {
+    for (const name of names) {
+      assert.ok(!text.includes(name), `「${text}」に問題の項目「${name}」が含まれている`);
+    }
+  }
+});
