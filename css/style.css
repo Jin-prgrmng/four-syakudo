@@ -255,12 +255,10 @@ details[open] summary { margin-bottom: 4px; }
 .btn.link { width: auto; min-height: 36px; margin: 6px auto 0; padding: 4px 10px; font-size: .85rem; color: var(--fg-dim); text-decoration: underline; }
 
 /*
-  メモリンの待機モーション（タイトル画面）。立ったコマ（.f1）とかがんだコマ（.f2）を 0.5 秒ずつ交互に見せる。
-  visibility を steps で切り替えるだけなので、描画の負担はほとんどない。
-  動きを止める設定では animation が無効になり、立ったコマだけが見える。
+  メモリンの待機モーション（タイトル画面）。立ったコマ（.f1）とかがんだコマ（.f2）を、
+  js/main.js の startIdle が 0.5 秒ごとに .crouch クラスを付け外しして切り替える。
+  CSS アニメーションで SVG の表示を切り替える方法はブラウザによって動かないことがあるため、JavaScript で切り替える。
 */
-.idle .f2 { visibility: hidden; }
-.idle .f1 { animation: idle-stand 1s steps(1, end) infinite; }
-.idle .f2 { animation: idle-crouch 1s steps(1, end) infinite; }
-@keyframes idle-stand { 0% { visibility: visible; } 50% { visibility: hidden; } }
-@keyframes idle-crouch { 0% { visibility: hidden; } 50% { visibility: visible; } }
+.idle .f2 { display: none; }
+.idle.crouch .f1 { display: none; }
+.idle.crouch .f2 { display: inline; }

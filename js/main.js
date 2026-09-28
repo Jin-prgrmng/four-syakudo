@@ -41,8 +41,16 @@ function go(name, params = {}) {
 
 const ctx = { root, go, settings, history: createHistory(), items: [], itemsById: new Map() };
 
-function showTitle({ root, history }) {
+// メモリンの待機モーション（軽い屈伸）を始め、止めるための関数を返す。0.5 秒ごとに立ちとかがみを切り替える。
+// 切り替えは .crouch クラスの付け外しだけで、表示は css/style.css が受け持つ。
+function startIdle(svg, intervalMs = 500) {
+  const timer = setInterval(() => svg.classList.toggle('crouch'), intervalMs);
+  return () => clearInterval(timer);
+}
+
+function showTitle({ root, history, settings }) {
   const best = history.best('sort');
+  const mascot = memorin('mascot', { idle: true });
   const m = menu([
     ['1. フローチャートで考える', '3つの問いで尺度にたどり着く', () => go('flow')],
     ['2. 4択クイズで確かめる', '1問ずつ答えて解説を読む', () => go('quiz')],
@@ -54,10 +62,12 @@ function showTitle({ root, history }) {
   enableArrowKeys(m);
   root.append(
     h('div', { class: 'title-head' },
-      memorin('mascot', { idle: true }),
+      mascot,
       h('h1', { class: 'logo' }, '4つの尺度', h('small', {}, 'メモリンと ものさしの冒険'))),
     h('div', { class: 'scale-row', 'aria-hidden': 'true' }, SCALE_IDS.map((id) => scaleLabel(id, { short: true }))),
     win('メニュー', m));
+  // 待機モーションは「点滅・ゆれの演出」の設定だけで止められる（画面を離れると止まる）
+  return settings.motion === 'on' ? startIdle(mascot) : null;
 }
 
 // 尺度の図鑑。タブで1つずつ表示し、スマートフォンの1画面に収める。

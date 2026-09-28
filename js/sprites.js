@@ -33,8 +33,7 @@ function frame(rows, cls) {
   return `<g class="${cls}">${rects.join('')}</g>`;
 }
 
-// idle: true で、2コマを交互に表示する待機モーション（軽い屈伸）を付ける。
-// 動きは CSS のアニメーションで切り替えるので、「点滅・ゆれの演出：なし」や OS の動きを減らす設定では止まる。
+// idle: true で、待機モーション用の2コマ（立ち・かがみ）を持つ SVG を作る。動かすのは js/main.js の startIdle。
 export function memorin(className = 'mascot', { idle = false } = {}) {
   const a11y = className === 'face' ? 'aria-hidden="true"' : 'role="img" aria-label="マスコットのメモリン"';
   const frames = idle ? frame(MEMORIN, 'f1') + frame(MEMORIN_CROUCH, 'f2') : frame(MEMORIN, 'f1');
