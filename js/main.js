@@ -2,7 +2,7 @@
 import { SCALES, SCALE_IDS, FLOW_STEPS } from './scales.js';
 import { createHistory } from './history.js';
 import { loadSettings, saveSettings, applySettings, SETTING_OPTIONS } from './settings.js';
-import { h, win, menu, button, scaleLabel, enableArrowKeys } from './ui.js';
+import { h, win, menu, button, scaleLabel, enableArrowKeys, mount } from './ui.js';
 import { memorin } from './sprites.js';
 import { startFlow } from './modes/flow.js';
 import { startQuiz } from './modes/quiz.js';
@@ -42,37 +42,56 @@ const ctx = { root, go, settings, history: createHistory(), items: [], itemsById
 function showTitle({ root, history }) {
   const best = history.best('sort');
   const m = menu([
-    ['フローチャートで考える', 'STEP 1　3つの問いで尺度にたどり着く', () => go('flow')],
-    ['4択クイズで確かめる', 'STEP 2　1問ずつ答えて解説を読む', () => go('quiz')],
-    ['60秒仕分けチャレンジ', `STEP 3　スコアと称号をねらう${best ? `（自己ベスト ${best}）` : ''}`, () => go('sort')],
-    ['冒険の記録', 'これまでの成績と、苦手な項目の復習', () => go('log')],
-    ['尺度の図鑑', '4つの尺度のちがいを見なおす', () => go('guide')],
-    ['設定', '文字・速さ・演出', () => go('settings')],
+    ['1. フローチャートで考える', '3つの問いで尺度にたどり着く', () => go('flow')],
+    ['2. 4択クイズで確かめる', '1問ずつ答えて解説を読む', () => go('quiz')],
+    ['3. 60秒仕分けチャレンジ', best ? `称号をねらう（自己ベスト ${best} 点）` : 'スコアと称号をねらう', () => go('sort')],
+    ['冒険の記録', '成績と苦手な項目の復習', () => go('log')],
+    ['尺度の図鑑', null, () => go('guide')],
+    ['設定', null, () => go('settings')],
   ]);
   enableArrowKeys(m);
   root.append(
-    h('div', { class: 'title-screen' },
+    h('div', { class: 'title-head' },
       memorin(),
-      h('h1', { class: 'logo' }, '4つの尺度', h('small', {}, '― メモリンと ものさしの冒険 ―')),
-      h('div', { class: 'scale-row', 'aria-hidden': 'true' }, SCALE_IDS.map((id) => scaleLabel(id, { short: true })))),
+      h('h1', { class: 'logo' }, '4つの尺度', h('small', {}, 'メモリンと ものさしの冒険'))),
+    h('div', { class: 'scale-row', 'aria-hidden': 'true' }, SCALE_IDS.map((id) => scaleLabel(id, { short: true }))),
     win('メニュー', m));
 }
 
-function showGuide({ root }) {
+// 尺度の図鑑。タブで1つずつ表示し、スマートフォンの1画面に収める。
+function showGuide({ root, items }) {
+  const tabs = [...SCALE_IDS, 'flow'];
+  const panel = h('div');
+  const tabRow = h('div', { class: 'opts', role: 'group', 'aria-label': '表示する内容' });
+
+  function render(tab) {
+    tabRow.replaceChildren(...tabs.map((t) => h('button', {
+      type: 'button', 'aria-pressed': String(t === tab), onclick: () => render(t),
+    }, t === 'flow' ? '見分け方' : scaleLabel(t, { short: true }))));
+    if (tab === 'flow') {
+      panel.replaceChildren(
+        h('ol', { style: 'margin:0; padding-left:1.4em' }, FLOW_STEPS.map((st) =>
+          h('li', { style: 'margin-bottom:8px' }, st.question, h('br'),
+            h('span', { class: 'small' }, st.detail), h('br'),
+            h('span', { class: 'small' }, 'いいえ → '), scaleLabel(st.ifNo)))),
+        h('p', {}, '3つとも「はい」なら ', scaleLabel('ratio'), '。'));
+      return;
+    }
+    const s = SCALES[tab];
+    const examples = items.filter((i) => i.scale === tab && i.level === 1 && !i.contested).slice(0, 4);
+    mount(panel,
+      h('h2', {}, scaleLabel(tab)),
+      h('p', {}, s.summary),
+      h('p', { class: 'small' }, `${s.kind}　できる計算：${s.operations}`),
+      s.alias ? h('p', { class: 'small' }, `「${s.alias}」と呼ぶ本もある。`) : null,
+      h('p', { class: 'small' }, `例：${examples.map((i) => i.label).join('、')}`));
+  }
+
+  render(SCALE_IDS[0]);
   root.append(
     h('h1', { class: 'head' }, '尺度の図鑑'),
-    ...SCALE_IDS.map((id) => {
-      const s = SCALES[id];
-      return win(null,
-        h('h2', {}, scaleLabel(id)),
-        h('p', {}, s.summary),
-        h('p', { class: 'small' }, `${s.kind}　できる計算：${s.operations}`),
-        s.alias ? h('p', { class: 'small' }, `「${s.alias}」と呼ぶ本もある。`) : null);
-    }),
-    win('見分け方',
-      h('ol', {}, FLOW_STEPS.map((st) =>
-        h('li', {}, st.question, h('br'), h('span', { class: 'small' }, 'いいえ → '), scaleLabel(st.ifNo)))),
-      h('p', {}, '3つとも「はい」なら ', scaleLabel('ratio'), '。')),
+    h('div', { class: 'setting' }, tabRow),
+    win(null, panel),
     h('div', { class: 'btn-row' }, button('メニューにもどる', () => go('title'))));
 }
 

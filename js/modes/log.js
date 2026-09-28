@@ -10,6 +10,10 @@ function describe(play) {
   return `${s.total} 問中 ${s.correct} 問正解`;
 }
 
+const playRow = (p) => h('div', { class: 'log-row' },
+  h('span', { class: 'small' }, `${formatDate(p.at)}　${MODE_NAMES[p.mode] ?? p.mode}`),
+  h('span', {}, describe(p)));
+
 export function startLog(ctx) {
   const { root, go, history, itemsById } = ctx;
   const plays = history.all();
@@ -47,25 +51,25 @@ export function startLog(ctx) {
   mount(root,
     h('h1', { class: 'head' }, '冒険の記録'),
     win('これまで',
-      h('p', {}, `プレイ回数：${plays.length} 回`),
-      best ? h('p', {}, `仕分けの自己ベスト：${best.summary.score} 点（${best.summary.grade} ${best.summary.title}）`) : null,
-      h('p', { class: 'small' }, '記録はこの端末のブラウザに保存される。ブラウザの履歴やデータを消すと記録も消えるので、残したいときは CSV で保存する。')),
+      h('p', {}, `プレイ ${plays.length} 回`,
+        best ? `　仕分けの自己ベスト ${best.summary.score} 点（${best.summary.grade} ${best.summary.title}）` : ''),
+      h('details', {}, h('summary', { class: 'small' }, '記録の保存場所について'),
+        h('p', { class: 'small' }, '記録はこの端末のブラウザに保存される。ブラウザの履歴やデータを消すと記録も消えるので、残したいときは CSV で保存する。'))),
     weak.length ? win('苦手な項目',
-      h('ul', { class: 'review-list' }, weak.map((w) => {
+      h('ul', { class: 'review-list' }, weak.slice(0, 5).map((w) => {
         const item = itemsById.get(w.id);
-        return h('li', {},
-          h('p', {}, h('span', { class: 'label' }, item.label), '　', scaleLabel(item.scale)),
-          h('p', { class: 'small' }, `${w.tries} 回中 ${w.wrong} 回まちがえた`,
-            w.lastChosen ? h('span', {}, '（最後に選んだ答え：', scaleLabel(w.lastChosen), '）') : null),
-          h('details', {}, h('summary', {}, '解説を読む'), h('p', {}, item.explanation)));
+        return h('li', {}, h('details', {},
+          h('summary', {}, h('span', { class: 'label' }, item.label), '　', scaleLabel(item.scale, { short: true }),
+            h('span', { class: 'small' }, `　${w.wrong}/${w.tries}ミス`)),
+          w.lastChosen ? h('p', { class: 'small' }, '最後に選んだ答え：', scaleLabel(w.lastChosen)) : null,
+          h('p', { class: 'small' }, item.explanation)));
       })),
       h('div', { class: 'btn-row' },
-        button('苦手な項目をクイズで復習', () => go('quiz', { items: weak.map((w) => itemsById.get(w.id)) }), { 'data-autofocus': true })))
+        button(`苦手な項目${weak.length}件をクイズで復習`, () => go('quiz', { items: weak.map((w) => itemsById.get(w.id)) }), { 'data-autofocus': true })))
       : null,
     win('最近のプレイ',
-      h('div', {}, recent.map((p) => h('div', { class: 'log-row' },
-        h('span', { class: 'small' }, `${formatDate(p.at)}　${MODE_NAMES[p.mode] ?? p.mode}`),
-        h('span', {}, describe(p)))))),
+      h('div', {}, recent.slice(0, 3).map(playRow)),
+      recent.length > 3 ? h('details', {}, h('summary', { class: 'small' }, 'もっと見る'), recent.slice(3).map(playRow)) : null),
     h('div', { class: 'btn-row' },
       button('記録を CSV で保存', download),
       button('記録をすべて消す', clearAll),

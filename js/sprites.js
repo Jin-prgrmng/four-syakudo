@@ -29,6 +29,6 @@ export function memorin(className = 'mascot') {
     });
   });
   const wrap = document.createElement('span');
-  wrap.innerHTML = `<svg class="${className}" viewBox="0 0 12 16" shape-rendering="crispEdges" role="img" aria-label="マスコットのメモリン">${rects.join('')}</svg>`;
+  wrap.innerHTML = `<svg class="${className}" viewBox="0 0 12 16" shape-rendering="crispEdges" ${className === 'face' ? 'aria-hidden="true"' : 'role="img" aria-label="マスコットのメモリン"'}>${rects.join('')}</svg>`;
   return wrap.firstChild;
 }

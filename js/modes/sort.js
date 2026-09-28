@@ -2,7 +2,7 @@
 import { SCALE_IDS, SCALES } from '../scales.js';
 import { createSortDeck } from '../pick.js';
 import { SORT_CONFIG, TITLES, summarize } from '../scoring.js';
-import { h, win, button, scaleLabel, mount } from '../ui.js';
+import { h, win, button, scaleLabel, mount, verdict } from '../ui.js';
 
 const WRONG_LOCK_MS = 300;
 
@@ -19,7 +19,7 @@ export function startSort(ctx) {
   function showIntro() {
     const best = history.best('sort');
     root.replaceChildren(
-      h('h1', { class: 'head' }, '60秒仕分けチャレンジ'),
+      h('h1', { class: 'head' }, 'STEP 3　60秒仕分けチャレンジ'),
       win('ルール',
         h('p', {}, `出てくる項目を、${SORT_CONFIG.timeLimitSec}秒のあいだにできるだけ多く4つの尺度へ仕分ける。`),
         h('p', {}, 'カードを箱へドラッグするか、箱をタップする。キーボードなら 1〜4 キーで選べる。'),
@@ -52,7 +52,7 @@ export function startSort(ctx) {
     const timebar = h('div', { class: 'timebar', role: 'progressbar', 'aria-label': '残り時間' }, bar);
     const timeText = h('span', {}, '');
     const scoreText = h('span', {}, 'SCORE 0');
-    const comboText = h('span', {}, '');
+    const comboText = h('p', { class: 'combo', 'aria-live': 'off' }, '');
     const feedback = h('p', { class: 'feedback', 'aria-live': 'polite' }, '');
     const label = h('p', { class: 'label' });
     const example = h('p', { class: 'example' });
@@ -65,8 +65,7 @@ export function startSort(ctx) {
       SCALES[id].name,
       h('span', { class: 'key', 'aria-hidden': 'true' }, `[${n + 1}]`))));
 
-    root.replaceChildren(h('div', { class: 'hud' }, timebar, timeText, scoreText), comboText, feedback, card, boxes);
-    comboText.className = 'small';
+    root.replaceChildren(h('div', { class: 'hud' }, timebar, timeText, scoreText), card, comboText, feedback, boxes);
 
     function nextCard() {
       item = deck.next();
@@ -87,10 +86,10 @@ export function startSort(ctx) {
       const combo = currentCombo();
       comboText.textContent = combo >= 2 ? `${combo} コンボ！` : '';
       if (correct) {
-        feedback.replaceChildren(h('span', { class: 'verdict good' }, `○ 正解 +${now.score - before}`));
+        feedback.replaceChildren(verdict('○', `正解 +${now.score - before}`));
         nextCard();
       } else {
-        feedback.replaceChildren(h('span', { class: 'verdict bad' }, `× ${item.label} は `), scaleLabel(item.scale));
+        feedback.replaceChildren(verdict('×', `${item.label} は `, scaleLabel(item.scale)));
         locked = true;
         card.classList.remove('shake');
         void card.offsetWidth; // アニメーションを最初からやり直す
@@ -155,7 +154,7 @@ export function startSort(ctx) {
       over = true;
       onKey = null;
       for (const b of boxes.querySelectorAll('button')) b.disabled = true;
-      feedback.replaceChildren(h('span', { class: 'verdict' }, 'そこまで！'));
+      feedback.replaceChildren(verdict('', 'そこまで！'));
       later(() => showResult(answers), 900);
     }
 
@@ -180,27 +179,28 @@ export function startSort(ctx) {
     const missedIds = [...new Set(answers.filter((a) => !a.correct).map((a) => a.id))];
     const missedItems = missedIds.map((id) => ctx.itemsById.get(id));
     const pct = (x) => `${Math.round(x * 100)}%`;
-    const row = (k, v) => h('tr', {}, h('th', { scope: 'row' }, k), h('td', {}, v));
+    const stat = (k, v) => h('div', {}, h('small', {}, k), h('b', {}, v));
 
     mount(root,
-      h('h1', { class: 'head' }, '仕分けチャレンジ　結果'),
+      h('h1', { class: 'head' }, 'STEP 3　結果'),
       h('section', { class: 'win banner' },
         h('p', { class: 'grade' }, `称号　${r.title.grade}`),
         h('p', { class: 'ttl' }, r.title.title)),
       r.score > prevBest && prevBest > 0 ? h('p', { class: 'new-best' }, '自己ベスト更新！') : null,
-      win('成績', h('table', { class: 'stats' }, h('tbody', {},
-        row('スコア', `${r.score} 点`),
-        row('正解 / 回答', `${r.correct} / ${r.answered}`),
-        row('正答率', pct(r.accuracy)),
-        row('1分あたりの正解数', r.perMinute.toFixed(1)),
-        row('平均回答時間（正解時）', r.avgSec === null ? '―' : `${r.avgSec.toFixed(2)} 秒`),
-        row('最大コンボ', r.maxCombo))),
-      nextTitle ? h('p', { class: 'small' },
+      win('成績', h('div', { class: 'stat-grid' },
+        stat('スコア', r.score),
+        stat('正解/回答', `${r.correct}/${r.answered}`),
+        stat('正答率', pct(r.accuracy)),
+        stat('1分の正解数', r.perMinute.toFixed(1)),
+        stat('平均回答秒', r.avgSec === null ? '―' : r.avgSec.toFixed(2)),
+        stat('最大コンボ', r.maxCombo)),
+      nextTitle ? h('p', { class: 'small', style: 'margin-top:8px' },
         `次の称号「${nextTitle.grade} ${nextTitle.title}」の条件：${nextTitle.minScore} 点以上、正答率 ${pct(nextTitle.minAccuracy)} 以上`) : null),
-      missedItems.length ? win('まちがえた項目',
+      missedItems.length ? win(null, h('details', {},
+        h('summary', {}, `まちがえた項目（${missedItems.length}）を見る`),
         h('ul', { class: 'review-list' }, missedItems.map((item) => h('li', {},
           h('p', {}, h('span', { class: 'label' }, item.label), '　', scaleLabel(item.scale)),
-          h('p', { class: 'small' }, item.explanation))))) : null,
+          h('p', { class: 'small' }, item.explanation)))))) : null,
       h('div', { class: 'btn-row' },
         button('もう一度', countdown, { 'data-autofocus': true }),
         missedItems.length ? button('まちがえた項目をクイズで復習', () => go('quiz', { items: missedItems })) : null,

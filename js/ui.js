@@ -1,5 +1,6 @@
 // 画面部品の共通処理。DOM を組み立てる小さな関数だけを置く。
 import { SCALES } from './scales.js';
+import { memorin } from './sprites.js';
 
 // h('div', { class: 'win' }, '文字', 子要素...) の形で要素を作る。文字列はテキストとして入るので安全。
 export function h(tag, attrs = {}, ...children) {
@@ -35,7 +36,8 @@ export function button(label, onclick, attrs = {}) {
 export function menu(entries) {
   return h('div', { class: 'menu', role: 'menu' },
     entries.map(([label, sub, onclick]) =>
-      h('button', { type: 'button', role: 'menuitem', onclick }, label, sub ? h('small', {}, sub) : null)));
+      h('button', { type: 'button', role: 'menuitem', onclick },
+        h('span', {}, label, sub ? h('span', { class: 'sub' }, sub) : null))));
 }
 
 // ↑↓ キーでメニューやボタン列の中を移動できるようにする。
@@ -87,4 +89,31 @@ export function formatDate(iso) {
 // null や false を除いて root の中身を置き換える（条件つきの部品をそのまま並べられるようにする）。
 export function mount(root, ...nodes) {
   root.replaceChildren(...nodes.flat().filter((n) => n !== null && n !== undefined && n !== false));
+}
+
+// メモリンが話すメッセージウインドウ。say(文字列 or 要素の配列, 1文字ずつ表示する本文) で中身を差し替える。
+export function messageWindow(settings) {
+  const text = h('div', { class: 'text', 'aria-live': 'polite' });
+  const el = win('メモリン', h('div', { class: 'msg' }, memorin('face'), text));
+  let typing = null;
+  return {
+    el,
+    say(lead, body) {
+      typing?.finish();
+      text.replaceChildren(...[lead].flat().filter(Boolean));
+      if (body) {
+        const p = h('p');
+        text.append(p);
+        typing = typeText(p, body, settings.textSpeed);
+      }
+    },
+    finish() {
+      typing?.finish();
+    },
+  };
+}
+
+// 正誤の表示。色ではなく記号（○ × △）と文字で示す。
+export function verdict(sym, ...children) {
+  return h('p', { class: 'verdict' }, h('span', { class: 'sym', 'aria-hidden': 'true' }, sym), ...children);
 }
