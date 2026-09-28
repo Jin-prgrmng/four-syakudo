@@ -15,6 +15,7 @@
   --fg-dim: #b9b6c9;
   --line: #f4f1e8;
   --focus: #ffffff;
+  --inner: var(--fg-dim);
   --nominal: #dd55ff;
   --ordinal: #77ffff;
   --interval: #ffff00;
@@ -24,6 +25,26 @@
   --font-head: var(--font-dot);
   --base-size: 16px;
   color-scheme: dark;
+}
+/*
+  モノクロ4階調モード（初代ゲームボーイの液晶のような緑がかった4色）。
+  文字は背景とのコントラストを確保するため、いちばん暗い色だけを使う（明るい2色に対して 5.0:1 以上）。
+  2番目に暗い色は、ウインドウの内枠などの飾りにだけ使う。尺度は色では区別できないので、形の記号と名前で見分ける。
+*/
+:root[data-palette="gb"] {
+  --gb0: #9bbc0f; --gb1: #8bac0f; --gb2: #306230; --gb3: #0f380f;
+  --bg: var(--gb1);
+  --win: var(--gb0);
+  --fg: var(--gb3);
+  --fg-dim: var(--gb3);
+  --line: var(--gb3);
+  --focus: var(--gb3);
+  --inner: var(--gb2);
+  --nominal: var(--gb3);
+  --ordinal: var(--gb3);
+  --interval: var(--gb3);
+  --ratio: var(--gb3);
+  color-scheme: light;
 }
 :root[data-font="ud"] { --font-head: var(--font-ud); }
 :root[data-size="l"] { --base-size: 19px; }
@@ -62,7 +83,7 @@ p { margin: 0 0 .5em; }
   background: var(--win);
   border: 3px solid var(--line);
   border-radius: 8px;
-  box-shadow: inset 0 0 0 3px var(--win), inset 0 0 0 5px var(--fg-dim);
+  box-shadow: inset 0 0 0 3px var(--win), inset 0 0 0 5px var(--inner);
   padding: 12px 14px 10px;
   margin: 0 0 10px;
 }
@@ -203,3 +224,30 @@ details[open] summary { margin-bottom: 4px; }
   *, *::before { animation: none !important; transition: none !important; }
 }
 :root[data-motion="off"] *, :root[data-motion="off"] *::before { animation: none !important; transition: none !important; }
+
+/* マスコットのドット絵の色 */
+.px-k, .px-b { fill: #1b1b2f; }
+.px-y { fill: #f0e442; }
+.px-o { fill: #e69f00; }
+.px-w { fill: #ffffff; }
+.px-p { fill: #e08fc4; }
+:root[data-palette="gb"] .px-k, :root[data-palette="gb"] .px-b { fill: var(--gb3); }
+:root[data-palette="gb"] .px-y { fill: var(--gb1); }
+:root[data-palette="gb"] .px-w { fill: var(--gb0); }
+:root[data-palette="gb"] .px-o, :root[data-palette="gb"] .px-p { fill: var(--gb2); }
+
+/* 称号と階級 */
+.title-list { list-style: none; margin: 8px 0 0; padding: 0; }
+.title-list li { border-top: 1px dashed var(--fg-dim); padding: 2px 6px; }
+.title-list li:first-child { border-top: 0; }
+.title-list li.now { border: 3px solid var(--fg); border-radius: 6px; }
+.title-list summary { display: flex; align-items: baseline; gap: 10px; }
+.title-list .grade { font-family: var(--font-head); min-width: 2.6em; color: var(--fg-dim); }
+.title-list .ttl { font-family: var(--font-head); flex: 1; }
+.title-list .mark-now { font-family: var(--font-head); font-size: .85rem; }
+.title-list details p { margin: 0 0 4px 1.4em; }
+.title-list summary { list-style: none; cursor: pointer; }
+.title-list summary::-webkit-details-marker { display: none; }
+.title-list summary::before { content: "▸"; width: .8em; flex: none; }
+.title-list details[open] > summary::before { content: "▾"; }
+.btn.link { width: auto; min-height: 36px; margin: 6px auto 0; padding: 4px 10px; font-size: .85rem; color: var(--fg-dim); text-decoration: underline; }

@@ -18,14 +18,22 @@ export const SORT_CONFIG = {
 // 正答率の下限を設けて、当てずっぽうで数をこなしても上位に入れないようにする。
 // 得点の目安（全問正解の場合）: 1枚2.5秒で約7600点、3秒で約5800点、4秒で約3500点、6秒で約1450点。
 export const TITLES = [
-  { id: 'kaiden', grade: '皆伝', title: 'スティーヴンスの継承者', minScore: 7500, minAccuracy: 0.95 },
-  { id: 'dan3', grade: '三段', title: '尺度の賢者', minScore: 5500, minAccuracy: 0.9 },
-  { id: 'dan1', grade: '初段', title: '比例の魔導士', minScore: 4000, minAccuracy: 0.85 },
-  { id: 'kyu2', grade: '二級', title: '間隔の騎士', minScore: 2800, minAccuracy: 0.8 },
-  { id: 'kyu4', grade: '四級', title: '順序の旅人', minScore: 1800, minAccuracy: 0.7 },
-  { id: 'kyu6', grade: '六級', title: '名義の番人', minScore: 1000, minAccuracy: 0.6 },
-  { id: 'kyu8', grade: '八級', title: '目盛り見習い', minScore: 400, minAccuracy: 0.4 },
-  { id: 'kyu10', grade: '十級', title: 'ものさし拾い', minScore: -Infinity, minAccuracy: 0 },
+  { id: 'kaiden', grade: '皆伝', title: 'スティーヴンスの継承者', minScore: 7500, minAccuracy: 0.95,
+    desc: '4つの尺度を1946年に提唱した心理学者 S. S. スティーヴンスの名を継ぐ者。これより上の称号はない。' },
+  { id: 'dan3', grade: '三段', title: '尺度の賢者', minScore: 5500, minAccuracy: 0.9,
+    desc: 'どんな項目を見ても、4つの尺度を迷わず見分けられる。' },
+  { id: 'dan1', grade: '初段', title: '比例の魔導士', minScore: 4000, minAccuracy: 0.85,
+    desc: '0 が「何もない」ことを見抜き、「何倍」の世界をあやつる。' },
+  { id: 'kyu2', grade: '二級', title: '間隔の騎士', minScore: 2800, minAccuracy: 0.8,
+    desc: '等しい目盛りを守る騎士。0 がただの基準点にすぎない値も見分けられる。' },
+  { id: 'kyu4', grade: '四級', title: '順序の旅人', minScore: 1800, minAccuracy: 0.7,
+    desc: '並べる意味は分かってきた。幅のそろわない段階を見分ける旅の途中。' },
+  { id: 'kyu6', grade: '六級', title: '名義の番人', minScore: 1000, minAccuracy: 0.6,
+    desc: '数字で書かれていても、ただの名前や番号なら見抜ける。' },
+  { id: 'kyu8', grade: '八級', title: '目盛り見習い', minScore: 400, minAccuracy: 0.4,
+    desc: '目盛りの読み方を覚えはじめた見習い。' },
+  { id: 'kyu10', grade: '十級', title: 'ものさし拾い', minScore: -Infinity, minAccuracy: 0,
+    desc: '冒険に出たばかり。道ばたでものさしを拾ったところ。' },
 ];
 
 export function speedBonus(elapsedSec, cfg = SORT_CONFIG) {

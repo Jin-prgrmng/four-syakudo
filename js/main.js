@@ -8,6 +8,7 @@ import { startFlow } from './modes/flow.js';
 import { startQuiz } from './modes/quiz.js';
 import { startSort } from './modes/sort.js';
 import { startLog } from './modes/log.js';
+import { startTitles } from './modes/titles.js';
 
 const root = document.getElementById('app');
 const settings = loadSettings();
@@ -22,6 +23,7 @@ const SCREENS = {
   quiz: startQuiz,
   sort: startSort,
   log: startLog,
+  titles: startTitles,
   guide: showGuide,
   settings: showSettings,
 };

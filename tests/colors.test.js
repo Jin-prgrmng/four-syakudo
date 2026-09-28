@@ -55,3 +55,18 @@ test('尺度の4色は、ウインドウの背景に対して読みやすいコ�
     assert.ok(ratio >= MIN_CONTRAST, `${name} のコントラスト比が ${ratio.toFixed(1)} しかない`);
   }
 });
+
+test('モノクロ4階調モードの文字色は、明るい2色の背景に対して読みやすいコントラストがある', () => {
+  const gb = css.slice(css.indexOf(':root[data-palette="gb"] {'));
+  const tone = (n) => gb.match(new RegExp(`--gb${n}:\\s*(#[0-9a-fA-F]{6})`))[1];
+  const text = tone(3);
+  for (const bg of [tone(0), tone(1)]) {
+    const [hi, lo] = [luminance(bg), luminance(text)].sort((a, b) => b - a);
+    const ratio = (hi + 0.05) / (lo + 0.05);
+    assert.ok(ratio >= MIN_CONTRAST, `${text} と ${bg} のコントラスト比が ${ratio.toFixed(1)} しかない`);
+  }
+  // 文字に使う変数は、いちばん暗い色（--gb3）だけを指していること
+  for (const v of ['fg', 'fg-dim', 'nominal', 'ordinal', 'interval', 'ratio']) {
+    assert.match(gb, new RegExp(`--${v}:\\s*var\\(--gb3\\)`), `--${v} がいちばん暗い色になっていない`);
+  }
+});

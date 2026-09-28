@@ -6,7 +6,8 @@ import { h, win, button, scaleLabel, mount, verdict } from '../ui.js';
 
 const WRONG_LOCK_MS = 300;
 
-export function startSort(ctx) {
+// params.replay（answers と prevBest）を渡すと、記録を増やさずに結果画面だけを表示しなおす（称号の説明から戻るとき）。
+export function startSort(ctx, params = {}) {
   const { root, go, history } = ctx;
   const timers = new Set();
   let onKey = null;
@@ -28,6 +29,7 @@ export function startSort(ctx) {
         best ? h('p', { class: 'head' }, `自己ベスト：${best} 点`) : null),
       h('div', { class: 'btn-row' },
         button('スタート', countdown, { 'data-autofocus': true }),
+        button('称号と階級', () => go('titles', { back: { name: 'sort' } })),
         button('メニューにもどる', () => go('title'))));
   }
 
@@ -162,10 +164,9 @@ export function startSort(ctx) {
     timeText.textContent = `TIME ${SORT_CONFIG.timeLimitSec}`;
   }
 
-  function showResult(answers) {
+  function showResult(answers, { save = true, prevBest = history.best('sort') } = {}) {
     const r = summarize(answers);
-    const prevBest = history.best('sort');
-    history.add({
+    if (save) history.add({
       mode: 'sort',
       summary: {
         score: r.score, correct: r.correct, total: r.answered, accuracy: r.accuracy,
@@ -185,7 +186,11 @@ export function startSort(ctx) {
       h('h1', { class: 'head' }, 'STEP 3　結果'),
       h('section', { class: 'win banner' },
         h('p', { class: 'grade' }, `称号　${r.title.grade}`),
-        h('p', { class: 'ttl' }, r.title.title)),
+        h('p', { class: 'ttl' }, r.title.title),
+        button('称号と階級の説明を見る', () => go('titles', {
+          current: r.title.id,
+          back: { name: 'sort', label: '結果にもどる', params: { replay: { answers, prevBest } } },
+        }), { class: 'btn link' })),
       r.score > prevBest && prevBest > 0 ? h('p', { class: 'new-best' }, '自己ベスト更新！') : null,
       win('成績', h('div', { class: 'stat-grid' },
         stat('スコア', r.score),
@@ -210,7 +215,8 @@ export function startSort(ctx) {
 
   const keyHandler = (e) => onKey?.(e);
   document.addEventListener('keydown', keyHandler);
-  showIntro();
+  if (params.replay) showResult(params.replay.answers, { save: false, prevBest: params.replay.prevBest });
+  else showIntro();
   return () => {
     for (const t of timers) { clearTimeout(t); clearInterval(t); }
     document.removeEventListener('keydown', keyHandler);
