@@ -56,7 +56,7 @@ test('尺度の4色は、ウインドウの背景に対して読みやすいコ�
   }
 });
 
-test('モノクロ4階調モードの文字色は、明るい2色の背景に対して読みやすいコントラストがある', () => {
+test('レトロ液晶モードの文字色は、明るい2色の背景に対して読みやすいコントラストがある', () => {
   const gb = css.slice(css.indexOf(':root[data-palette="gb"] {'));
   const tone = (n) => gb.match(new RegExp(`--gb${n}:\\s*(#[0-9a-fA-F]{6})`))[1];
   const text = tone(3);

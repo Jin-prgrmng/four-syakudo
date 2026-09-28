@@ -54,7 +54,7 @@ function showTitle({ root, history }) {
   enableArrowKeys(m);
   root.append(
     h('div', { class: 'title-head' },
-      memorin(),
+      memorin('mascot', { idle: true }),
       h('h1', { class: 'logo' }, '4つの尺度', h('small', {}, 'メモリンと ものさしの冒険'))),
     h('div', { class: 'scale-row', 'aria-hidden': 'true' }, SCALE_IDS.map((id) => scaleLabel(id, { short: true }))),
     win('メニュー', m));

@@ -27,7 +27,7 @@
   color-scheme: dark;
 }
 /*
-  モノクロ4階調モード（ニンテンドー3DS のバーチャルコンソールでゲームボーイ作品を表示するときの、わずかに黄みがかったグレー4色）。
+  レトロ液晶モード（ニンテンドー3DS のバーチャルコンソールでゲームボーイ作品を表示するときの、わずかに黄みがかったグレー4色）。
   文字は背景とのコントラストを確保するため、いちばん暗い色だけを使う（明るい2色に対して 5.6:1 以上）。
   2番目に暗い色は、ウインドウの内枠などの飾りにだけ使う。尺度は色では区別できないので、形の記号と名前で見分ける。
 */
@@ -233,6 +233,8 @@ details[open] summary { margin-bottom: 4px; }
 .px-p { fill: #e08fc4; }
 :root[data-palette="gb"] .px-k, :root[data-palette="gb"] .px-b { fill: var(--gb3); }
 :root[data-palette="gb"] .px-y { fill: var(--gb1); }
+/* タイトル画面のメモリンは画面の背景（--gb1）の上にいるので、体をいちばん明るい色にして背景と分ける */
+:root[data-palette="gb"] .mascot .px-y { fill: var(--gb0); }
 :root[data-palette="gb"] .px-w { fill: var(--gb0); }
 :root[data-palette="gb"] .px-o, :root[data-palette="gb"] .px-p { fill: var(--gb2); }
 
@@ -251,3 +253,14 @@ details[open] summary { margin-bottom: 4px; }
 .title-list summary::before { content: "▸"; width: .8em; flex: none; }
 .title-list details[open] > summary::before { content: "▾"; }
 .btn.link { width: auto; min-height: 36px; margin: 6px auto 0; padding: 4px 10px; font-size: .85rem; color: var(--fg-dim); text-decoration: underline; }
+
+/*
+  メモリンの待機モーション（タイトル画面）。立ったコマ（.f1）とかがんだコマ（.f2）を 0.5 秒ずつ交互に見せる。
+  visibility を steps で切り替えるだけなので、描画の負担はほとんどない。
+  動きを止める設定では animation が無効になり、立ったコマだけが見える。
+*/
+.idle .f2 { visibility: hidden; }
+.idle .f1 { animation: idle-stand 1s steps(1, end) infinite; }
+.idle .f2 { animation: idle-crouch 1s steps(1, end) infinite; }
+@keyframes idle-stand { 0% { visibility: visible; } 50% { visibility: hidden; } }
+@keyframes idle-crouch { 0% { visibility: hidden; } 50% { visibility: visible; } }

@@ -2,7 +2,7 @@
 const KEY = 'four-syakudo:settings:v1';
 
 export const SETTING_OPTIONS = {
-  palette: { label: '画面の色', options: [['color', 'カラー'], ['gb', 'モノクロ4階調']] },
+  palette: { label: '画面の色', options: [['color', 'カラー'], ['gb', 'レトロ液晶']] },
   font: { label: '見出しの文字', options: [['dot', 'ドット文字'], ['ud', 'UDフォント']] },
   size: { label: '文字の大きさ', options: [['m', 'ふつう'], ['l', '大きい']] },
   textSpeed: { label: 'メッセージの速さ', options: [['normal', 'ゆっくり'], ['fast', 'はやい'], ['instant', 'すぐ全文']] },
