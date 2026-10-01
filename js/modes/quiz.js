@@ -28,7 +28,8 @@ export function startQuiz(ctx, params = {}) {
       win(null, h('div', { class: 'card' },
         h('p', { class: 'qno' }, `${review ? '復習' : 'STEP 2 4択クイズ'}　第 ${index + 1} 問 / ${questions.length}`),
         h('p', { class: 'label' }, item.label),
-        h('p', { class: 'example' }, `例：${item.example}`))),
+        h('p', { class: 'example' }, `例：${item.example}`),
+        item.hint ? h('p', { class: 'item-hint' }, item.hint) : null)),
       choices,
       memo.el,
       next);
@@ -43,6 +44,8 @@ export function startQuiz(ctx, params = {}) {
     function choose(id) {
       if (answered) return;
       answered = true;
+      // 解答後は箱を低くして、解説を読む場所を空ける
+      choices.classList.add('answered');
       for (const b of choices.querySelectorAll('button')) {
         b.disabled = true;
         // 正解の箱を塗りつぶして示す。ほかの箱は枠を点線にして目立たなくする。
@@ -61,8 +64,7 @@ export function startQuiz(ctx, params = {}) {
         const d = divergingStep(id, item.scale);
         lead = [
           verdict('×', '残念。正解は ', scaleLabel(item.scale)),
-          h('p', { class: 'hint' }, `分かれ目：${d.step.question}`, h('br'),
-            `選んだ答えだと「${d.chosen ? 'はい' : 'いいえ'}」、正しくは「${d.correct ? 'はい' : 'いいえ'}」。`),
+          h('p', { class: 'hint' }, `分かれ目：${d.step.question}　→ 正しくは「${d.correct ? 'はい' : 'いいえ'}」`),
         ];
       }
       memo.say(lead, item.explanation);

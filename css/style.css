@@ -136,6 +136,9 @@ p { margin: 0 0 .5em; }
 .card { text-align: center; }
 .card .label { font-size: 1.2rem; font-weight: 700; line-height: 1.5; margin: 0; }
 .card .example { color: var(--fg-dim); font-size: .9rem; margin: 4px 0 0; }
+/* 項目を解くのに必要な前提知識（data/items.json の hint）。尺度の判断そのものは書かない */
+.card .item-hint { font-size: .8rem; color: var(--fg-dim); margin: 2px 0 0; line-height: 1.5; }
+.card .item-hint:empty { display: none; }
 .card .qno { font-family: var(--font-head); color: var(--fg-dim); font-size: .8rem; margin: 0 0 2px; }
 
 /* 4つの尺度の選択肢・仕分けの箱 */
@@ -149,6 +152,9 @@ p { margin: 0 0 .5em; }
   display: flex; align-items: center; justify-content: center; gap: 6px; line-height: 1.3;
 }
 .box .mark { font-size: 1.35rem; }
+.boxes.answered .box { min-height: 40px; font-size: .92rem; }
+.boxes.answered .box .mark { font-size: 1.1rem; }
+.boxes.answered .box .key { display: none; }
 .box .key { font-family: var(--font-ud); font-size: .72rem; color: var(--fg-dim); }
 .box.hover, .box:active, .box.answer { background: var(--c); color: var(--bg); }
 .box.hover .key, .box:active .key, .box.answer .key { color: var(--bg); }

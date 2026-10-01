@@ -35,7 +35,8 @@ export function startFlow(ctx) {
       h('div', { class: 'card' },
         h('p', { class: 'qno' }, `フローチャート　項目 ${index + 1} / ${items.length}`),
         h('p', { class: 'label' }, item.label),
-        h('p', { class: 'example' }, `例：${item.example}`)));
+        h('p', { class: 'example' }, `例：${item.example}`),
+        item.hint ? h('p', { class: 'item-hint' }, item.hint) : null));
     const questionBox = h('div');
 
     mount(root, card, win(null, questionBox), memo.el);

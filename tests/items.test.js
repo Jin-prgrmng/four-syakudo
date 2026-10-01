@@ -52,3 +52,10 @@ test('フローチャートの例とヒントに、問題の項目が出てこ�
     }
   }
 });
+
+test('前提知識のヒントは短い1行にする', () => {
+  for (const item of items.filter((i) => 'hint' in i)) {
+    assert.equal(typeof item.hint, 'string');
+    assert.ok(item.hint.length > 0 && item.hint.length <= 40, `${item.id}: hint は 1〜40 文字（いまは ${item.hint.length} 文字）`);
+  }
+});

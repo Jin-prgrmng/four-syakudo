@@ -58,7 +58,8 @@ export function startSort(ctx, params = {}) {
     const feedback = h('p', { class: 'feedback', 'aria-live': 'polite' }, '');
     const label = h('p', { class: 'label' });
     const example = h('p', { class: 'example' });
-    const card = h('section', { class: 'win card sort-card', 'aria-live': 'polite' }, label, example);
+    const hint = h('p', { class: 'item-hint' });
+    const card = h('section', { class: 'win card sort-card', 'aria-live': 'polite' }, label, example, hint);
     const boxes = h('div', { class: 'boxes' },
       SCALE_IDS.map((id, n) => h('button', {
         class: 'box', type: 'button', 'data-scale': id, onclick: () => answer(id),
@@ -73,6 +74,7 @@ export function startSort(ctx, params = {}) {
       item = deck.next();
       label.textContent = item.label;
       example.textContent = `例：${item.example}`;
+      hint.textContent = item.hint ?? '';
       shownAt = performance.now();
       locked = false;
     }
