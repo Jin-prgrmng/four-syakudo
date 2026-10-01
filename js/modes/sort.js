@@ -2,7 +2,7 @@
 import { SCALE_IDS, SCALES } from '../scales.js';
 import { createSortDeck } from '../pick.js';
 import { SORT_CONFIG, TITLES, summarize } from '../scoring.js';
-import { h, win, button, scaleLabel, mount, verdict } from '../ui.js';
+import { h, win, button, scaleLabel, mount, verdict, phrased } from '../ui.js';
 
 const WRONG_LOCK_MS = 300;
 
@@ -72,9 +72,9 @@ export function startSort(ctx, params = {}) {
 
     function nextCard() {
       item = deck.next();
-      label.textContent = item.label;
-      example.textContent = `例：${item.example}`;
-      hint.textContent = item.hint ?? '';
+      label.replaceChildren(phrased(item.label));
+      example.replaceChildren(phrased(`例：${item.example}`));
+      hint.replaceChildren(phrased(item.hint ?? ''));
       shownAt = performance.now();
       locked = false;
     }

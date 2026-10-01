@@ -1,8 +1,34 @@
 // 画面部品の共通処理。DOM を組み立てる小さな関数だけを置く。
 import { SCALES } from './scales.js';
 import { memorin } from './sprites.js';
+import { splitPhrases } from './phrase.js';
+
+// 文節を、途中で改行しないまとまり（.ph）として包むかどうか。
+// 空白を含む文節（「150 cm, 165 cm」など）は空白で改行できるので包まない。
+// 1行より長い文節を包むと画面からはみ出すので、12文字を超える文節も包まない。
+const keepTogether = (part) => !/\s/.test(part) && [...part].length <= 12;
+
+// 文字列を、文節の切れ目にだけ改行を許す形（区切りに <wbr> を入れた断片）にする。
+// css/style.css で word-break: keep-all を指定し、さらに短い文節は .ph（white-space: nowrap）で包むので、
+// 「・」の直後のようにブラウザが独自に改行しがちな位置でも、文節の途中では改行しない。
+export function phrased(text) {
+  const frag = document.createDocumentFragment();
+  splitPhrases(text).forEach((part, i) => {
+    if (i > 0) frag.append(document.createElement('wbr'));
+    if (keepTogether(part)) {
+      const span = document.createElement('span');
+      span.className = 'ph';
+      span.textContent = part;
+      frag.append(span);
+    } else {
+      frag.append(document.createTextNode(part));
+    }
+  });
+  return frag;
+}
 
 // h('div', { class: 'win' }, '文字', 子要素...) の形で要素を作る。文字列はテキストとして入るので安全。
+// 文字列は phrased() を通し、文節の切れ目で改行されるようにする。
 export function h(tag, attrs = {}, ...children) {
   const el = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs)) {
@@ -13,7 +39,7 @@ export function h(tag, attrs = {}, ...children) {
   }
   for (const c of children.flat()) {
     if (c === null || c === undefined || c === false) continue;
-    el.append(c instanceof Node ? c : document.createTextNode(String(c)));
+    el.append(c instanceof Node ? c : phrased(String(c)));
   }
   return el;
 }
@@ -29,8 +55,9 @@ export function scaleLabel(id, { short = false } = {}) {
     h('span', { class: 'mark', 'aria-hidden': 'true' }, s.mark), short ? s.short : s.name);
 }
 
+// ボタンは中身を横に並べる（flex）ので、文字は1つの span に包み、文節ごとの部品がばらばらに並ばないようにする。
 export function button(label, onclick, attrs = {}) {
-  return h('button', { class: 'btn', type: 'button', onclick, ...attrs }, label);
+  return h('button', { class: 'btn', type: 'button', onclick, ...attrs }, h('span', {}, label));
 }
 
 export function menu(entries) {
@@ -55,27 +82,39 @@ export function enableArrowKeys(root) {
 
 // RPG のメッセージのように1文字ずつ表示する。タップかキー操作ですぐ全文を出す。
 // 画面読み上げ用には、全文を最初から見えない要素に入れておく。
+// 表示し終えたときの改行位置が途中で動かないよう、全文を最初から並べておき、まだ出していない文字を見えなくしておく。
 export function typeText(target, text, speed) {
-  const visible = h('span', { 'aria-hidden': 'true' });
+  const visible = h('span', { 'aria-hidden': 'true', class: 'tw' });
   target.append(h('span', { class: 'sr-only' }, text), visible);
+  const chars = [];
+  splitPhrases(text).forEach((part, i) => {
+    if (i > 0) visible.append(document.createElement('wbr'));
+    const holder = keepTogether(part) ? h('span', { class: 'ph' }) : visible;
+    for (const c of part) {
+      const span = document.createElement('span');
+      span.textContent = c;
+      chars.push(span);
+      holder.append(span);
+    }
+    if (holder !== visible) visible.append(holder);
+  });
   const delay = { instant: 0, fast: 15, normal: 40 }[speed] ?? 15;
-  if (delay === 0) {
-    visible.textContent = text;
-    return { done: Promise.resolve(), finish() {} };
-  }
+  if (delay === 0) return { done: Promise.resolve(), finish() {} };
+
+  visible.classList.add('typing');
   let i = 0;
   let timer;
   let resolve;
   const done = new Promise((r) => (resolve = r));
   const finish = () => {
     clearInterval(timer);
-    visible.textContent = text;
+    visible.classList.remove('typing');
     resolve();
   };
   timer = setInterval(() => {
+    chars[i]?.classList.add('shown');
     i += 1;
-    visible.textContent = text.slice(0, i);
-    if (i >= text.length) finish();
+    if (i >= chars.length) finish();
   }, delay);
   return { done, finish };
 }

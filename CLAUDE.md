@@ -5,6 +5,7 @@
 - ビルドなし・外部ライブラリなしの HTML / CSS / ES Modules で書く。GitHub Pages にそのまま置ける状態を保つ。
 - UI から独立したロジック（js/scales.js, js/scoring.js, js/pick.js, js/history.js）は DOM に触れない関数にし、tests/ で検査する。
 - 見た目はレトロ RPG 風。低性能端末で動くよう、ぼかし影・半透明を使わず、動きは点滅・ゆれ・タイトルのメモリンの2コマ待機モーションに限る。
+- 画面の文字は ui.js の h() / phrased() を通して出す（文節の切れ目で改行させるため。textContent に直接入れない）。
 - 尺度は色だけで区別させない（必ず ● ▲ ■ ★ の記号と名前を併記）。本文は UD フォント、ドット文字は見出しのみ。
 - push する前に `npm run bump` を実行し、index.html のバージョン番号を更新する（GitHub Pages のキャッシュで新旧のファイルが混ざるのを防ぐ。js/ にファイルを足したときも必要）。
 - 変更後は `npm test` を通す。画面の確認は `npm start` でローカルサーバーを起動しておこなう。

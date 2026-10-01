@@ -59,7 +59,22 @@ body {
   line-height: 1.7;
   letter-spacing: .03em;
   -webkit-tap-highlight-color: transparent;
+  /*
+    文節の切れ目で改行する。js/phrase.js が切れ目に <wbr> を入れ、keep-all でそれ以外の位置の改行を止める。
+    1行に収まらない長い語だけは、はみ出さないよう任意の位置で折り返す（overflow-wrap: anywhere）。
+  */
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  line-break: strict;
 }
+/* 見出しや項目名は、行の長さをそろえて最後の行に1〜2文字だけ残らないようにする（対応ブラウザのみ） */
+h1, h2, .card .label, .q-main, .ttl { text-wrap: balance; }
+p, li { text-wrap: pretty; }
+/* 短い文節は途中で改行しない（js/ui.js の phrased が包む） */
+.ph { white-space: nowrap; }
+/* 1文字ずつ表示する途中は、まだ出していない文字を見えなくしておく（場所は確保したまま） */
+.tw.typing span:not(.ph) { visibility: hidden; }
+.tw.typing span.shown { visibility: visible; }
 /* 画面の中央に置く。中身が画面より長いときは上から並んでスクロールする。 */
 #app {
   max-width: 560px;
