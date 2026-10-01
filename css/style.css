@@ -81,7 +81,7 @@ p, li { text-wrap: pretty; }
   min-height: 100vh;
   min-height: 100dvh;
   margin: 0 auto;
-  padding: 8px 16px;
+  padding: 4px 16px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -108,6 +108,17 @@ p { margin: 0 0 .5em; }
   padding: 0 8px; background: var(--bg);
   font-family: var(--font-head); font-size: .85rem; line-height: 1.6;
 }
+
+/* プレイ中の「メニュー」ボタン（ウインドウの上の枠線に載せる）と、やめるかどうかの確認 */
+.quit { border: 0; color: var(--fg-dim); cursor: pointer; padding: 2px 8px; min-height: 26px; }
+.quit:hover, .quit:focus-visible { color: var(--fg); outline: 3px dashed var(--focus); outline-offset: 0; }
+.card { padding-top: 8px; }
+.overlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+.overlay .win { width: 100%; max-width: 420px; }
 
 /* タイトル画面 */
 .title-head { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 0 0 6px; }
@@ -189,16 +200,16 @@ p { margin: 0 0 .5em; }
 .hint { border-left: 4px solid var(--fg-dim); padding-left: 10px; font-size: .92rem; }
 
 /* フローチャートモード */
-.q-main { font-family: var(--font-head); font-size: 1.2rem; line-height: 1.5; margin: 0 0 8px; }
+.q-main { font-family: var(--font-head); font-size: 1.2rem; line-height: 1.5; margin: 0 0 6px; }
 .ex-line { font-size: .82rem; color: var(--fg-dim); margin: 0 0 2px; }
-.ex-line:last-of-type { margin-bottom: 12px; }
+.ex-line:last-of-type { margin-bottom: 8px; }
 .yesno { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .yesno .btn { justify-content: center; border-color: var(--fg); font-size: 1.1rem; }
 .yesno .btn::before { display: none; }
 .found { text-align: center; margin: 0 0 8px; }
 
 /* 仕分けモード */
-.hud { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; font-family: var(--font-head); margin-bottom: 6px; }
+.hud { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; font-family: var(--font-head); margin-bottom: 16px; }
 .timebar { height: 14px; border: 2px solid var(--line); border-radius: 3px; padding: 2px; }
 .timebar i { display: block; height: 100%; background: var(--fg); transform-origin: left; }
 .timebar.low i { background: repeating-linear-gradient(90deg, var(--fg) 0 4px, transparent 4px 8px); }

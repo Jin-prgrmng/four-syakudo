@@ -2,7 +2,7 @@
 // params.items を渡すと、その項目だけで出題する（冒険の記録からの復習に使う）。
 import { SCALE_IDS, SCALES, divergingStep } from '../scales.js';
 import { pickQuiz, shuffle } from '../pick.js';
-import { h, win, button, scaleLabel, messageWindow, verdict, mount } from '../ui.js';
+import { h, win, button, scaleLabel, messageWindow, verdict, mount, quitButton } from '../ui.js';
 
 export function startQuiz(ctx, params = {}) {
   const { root, go, settings, history } = ctx;
@@ -25,7 +25,7 @@ export function startQuiz(ctx, params = {}) {
     const next = h('div', { class: 'btn-row' });
 
     mount(root,
-      win(null, h('div', { class: 'card' },
+      win(null, quitButton({ onQuit: () => go('title') }), h('div', { class: 'card' },
         h('p', { class: 'qno' }, `${review ? '復習' : 'STEP 2 4択クイズ'}　第 ${index + 1} 問 / ${questions.length}`),
         h('p', { class: 'label' }, item.label),
         h('p', { class: 'example' }, `例：${item.example}`),

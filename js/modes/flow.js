@@ -2,7 +2,7 @@
 // メモリンが例の値を使って考え方を促し、まちがえたときは答えの向きに合わせたヒントを出す。
 import { FLOW_STEPS, SCALE_IDS, SCALES, PICK_HINT, answersForScale, thinkPrompt } from '../scales.js';
 import { shuffle } from '../pick.js';
-import { h, win, button, scaleLabel, messageWindow, verdict, mount } from '../ui.js';
+import { h, win, button, scaleLabel, messageWindow, verdict, mount, quitButton } from '../ui.js';
 
 const ITEMS_PER_PLAY = 5;
 
@@ -32,6 +32,7 @@ export function startFlow(ctx) {
     let firstPick = null;
 
     const card = win(null,
+      quitButton({ onQuit: () => go('title') }),
       h('div', { class: 'card' },
         h('p', { class: 'qno' }, `フローチャート　項目 ${index + 1} / ${items.length}`),
         h('p', { class: 'label' }, item.label),

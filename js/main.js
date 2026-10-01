@@ -39,6 +39,11 @@ function go(name, params = {}) {
   first?.focus({ preventScroll: true });
 }
 
+// プレイ中は Esc キーで「メニュー」ボタンと同じ確認を開く
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !document.querySelector('.overlay')) root.querySelector('.quit')?.click();
+});
+
 const ctx = { root, go, settings, history: createHistory(), items: [], itemsById: new Map() };
 
 // メモリンの待機モーション（軽い屈伸）を始め、止めるための関数を返す。0.5 秒ごとに立ちとかがみを切り替える。

@@ -156,3 +156,36 @@ export function messageWindow(settings) {
 export function verdict(sym, ...children) {
   return h('p', { class: 'verdict' }, h('span', { class: 'sym', 'aria-hidden': 'true' }, sym), ...children);
 }
+
+// プレイ中に置く「メニュー」ボタン。押すと確認の画面を出し、「やめる」でメニューに戻る。
+// ウインドウの上の枠線に載せる（.win-title と同じ位置）ので、画面の高さは増えない。
+// onOpen / onClose は確認の画面を出し入れするときに呼ぶ（60秒仕分けではタイマーを止めるのに使う）。
+// Esc キーでも同じ確認の画面を開く（js/main.js が .quit ボタンを押す）。
+export function quitButton({ onQuit, onOpen, onClose }) {
+  const btn = h('button', { class: 'win-title quit', type: 'button', 'aria-label': 'プレイをやめてメニューにもどる' }, '◀ メニュー');
+  btn.addEventListener('click', () => {
+    if (document.querySelector('.overlay')) return;
+    onOpen?.();
+    const close = () => {
+      document.removeEventListener('keydown', onEsc, true);
+      overlay.remove();
+    };
+    const onEsc = (e) => {
+      if (e.key !== 'Escape') return;
+      e.stopPropagation();
+      close();
+      onClose?.();
+      btn.focus({ preventScroll: true });
+    };
+    const keep = button('つづける', () => { close(); onClose?.(); btn.focus({ preventScroll: true }); });
+    const overlay = h('div', { class: 'overlay', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'プレイをやめる' },
+      win(null,
+        h('p', { class: 'q-main' }, 'プレイをやめて、メニューにもどる？'),
+        h('p', { class: 'small' }, 'ここまでの回答は記録されない。'),
+        h('div', { class: 'btn-row' }, keep, button('やめる', () => { close(); onQuit(); }))));
+    document.addEventListener('keydown', onEsc, true);
+    document.body.append(overlay);
+    keep.focus({ preventScroll: true });
+  });
+  return btn;
+}

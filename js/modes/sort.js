@@ -2,7 +2,7 @@
 import { SCALE_IDS, SCALES } from '../scales.js';
 import { createSortDeck } from '../pick.js';
 import { SORT_CONFIG, TITLES, summarize } from '../scoring.js';
-import { h, win, button, scaleLabel, mount, verdict, phrased } from '../ui.js';
+import { h, win, button, scaleLabel, mount, verdict, phrased, quitButton } from '../ui.js';
 
 const WRONG_LOCK_MS = 300;
 
@@ -44,7 +44,8 @@ export function startSort(ctx, params = {}) {
   function play() {
     const deck = createSortDeck(ctx.items);
     const answers = [];
-    const endAt = performance.now() + SORT_CONFIG.timeLimitSec * 1000;
+    let endAt = performance.now() + SORT_CONFIG.timeLimitSec * 1000;
+    let pausedAt = null; // 「メニュー」の確認を出している間は時間を止める
     let item = null;
     let shownAt = 0;
     let locked = false;
@@ -59,7 +60,18 @@ export function startSort(ctx, params = {}) {
     const label = h('p', { class: 'label' });
     const example = h('p', { class: 'example' });
     const hint = h('p', { class: 'item-hint' });
-    const card = h('section', { class: 'win card sort-card', 'aria-live': 'polite' }, label, example, hint);
+    const quit = quitButton({
+      onQuit: () => go('title'),
+      onOpen: () => { pausedAt = performance.now(); },
+      onClose: () => {
+        const now = performance.now();
+        endAt += now - pausedAt;
+        // 止めている間に次のカードが出ていた場合は、再開した時点から回答時間を数える
+        shownAt = shownAt > pausedAt ? now : shownAt + (now - pausedAt);
+        pausedAt = null;
+      },
+    });
+    const card = h('section', { class: 'win card sort-card', 'aria-live': 'polite' }, quit, label, example, hint);
     const boxes = h('div', { class: 'boxes' },
       SCALE_IDS.map((id, n) => h('button', {
         class: 'box', type: 'button', 'data-scale': id, onclick: () => answer(id),
@@ -80,7 +92,7 @@ export function startSort(ctx, params = {}) {
     }
 
     function answer(id) {
-      if (locked || over) return;
+      if (locked || over || pausedAt !== null) return;
       const elapsedSec = (performance.now() - shownAt) / 1000;
       const correct = id === item.scale;
       const before = summarize(answers).score;
@@ -113,7 +125,7 @@ export function startSort(ctx, params = {}) {
     const boxAt = (x, y) => document.elementsFromPoint(x, y).find((el) => el.classList.contains('box'));
     const clearHover = () => boxes.querySelectorAll('.hover').forEach((b) => b.classList.remove('hover'));
     card.addEventListener('pointerdown', (e) => {
-      if (locked || over) return;
+      if (locked || over || pausedAt !== null || e.target.closest('.quit')) return;
       drag = { x: e.clientX, y: e.clientY };
       card.setPointerCapture(e.pointerId);
       card.classList.add('dragging');
@@ -142,6 +154,7 @@ export function startSort(ctx, params = {}) {
     };
 
     const tick = setInterval(() => {
+      if (pausedAt !== null) return;
       const left = Math.max(0, endAt - performance.now()) / 1000;
       bar.style.transform = `scaleX(${left / SORT_CONFIG.timeLimitSec})`;
       timeText.textContent = `TIME ${Math.ceil(left)}`;
