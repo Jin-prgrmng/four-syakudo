@@ -3,6 +3,7 @@
 import { SCALE_IDS, SCALES, divergingStep } from '../scales.js';
 import { pickQuiz, shuffle } from '../pick.js';
 import { h, win, button, scaleLabel, messageWindow, verdict, mount, quitButton } from '../ui.js';
+import { celebrate, miss, pop } from '../fx.js';
 
 export function startQuiz(ctx, params = {}) {
   const { root, go, settings, history } = ctx;
@@ -24,16 +25,19 @@ export function startQuiz(ctx, params = {}) {
           h('span', { class: 'key', 'aria-hidden': 'true' }, `[${n + 1}]`))));
     const next = h('div', { class: 'btn-row' });
 
-    mount(root,
-      win(null, quitButton({ onQuit: () => go('title') }), h('div', { class: 'card' },
+    const labelEl = h('p', { class: 'label' }, item.label);
+    const cardWin = win(null, quitButton({ onQuit: () => go('title') }), h('div', { class: 'card' },
         h('p', { class: 'qno' }, `${review ? '復習' : 'STEP 2 4択クイズ'}　第 ${index + 1} 問 / ${questions.length}`),
-        h('p', { class: 'label' }, item.label),
+        labelEl,
         h('p', { class: 'example' }, `例：${item.example}`),
-        item.hint ? h('p', { class: 'item-hint' }, item.hint) : null)),
+        item.hint ? h('p', { class: 'item-hint' }, item.hint) : null));
+    mount(root,
+      cardWin,
       choices,
       memo.el,
       next);
     choices.querySelector('button').focus({ preventScroll: true });
+    pop(labelEl); // 「ド派手！」のときだけ項目名が大きく現れる
     memo.say(h('p', {}, 'この項目は、どの尺度にあたるだろう？'));
 
     onKey = (e) => {
@@ -58,10 +62,13 @@ export function startQuiz(ctx, params = {}) {
       let lead;
       if (exact) {
         lead = verdict('○', '正解！');
+        celebrate(cardWin);
       } else if (partial) {
+        celebrate(cardWin, 'セーフ!!');
         lead = [verdict('△', 'その考え方もある。'), h('p', {}, 'よく使われる答えは ', scaleLabel(item.scale), '。')];
       } else {
         const d = divergingStep(id, item.scale);
+        miss(cardWin);
         lead = [
           verdict('×', '残念。正解は ', scaleLabel(item.scale)),
           h('p', { class: 'hint' }, `分かれ目：${d.step.question}　→ 正しくは「${d.correct ? 'はい' : 'いいえ'}」`),

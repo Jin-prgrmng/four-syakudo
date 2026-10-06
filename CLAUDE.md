@@ -3,8 +3,9 @@
 大学の授業で使う（難易度は高校程度）、4つの尺度（名義・順序・間隔・比例）を学ぶ静的 Web ゲーム。仕様は docs/design.md を正とする。
 
 - ビルドなし・外部ライブラリなしの HTML / CSS / ES Modules で書く。GitHub Pages にそのまま置ける状態を保つ。
-- UI から独立したロジック（js/scales.js, js/scoring.js, js/pick.js, js/history.js, js/phrase.js, js/sprite-data.js）は DOM に触れない関数にし、tests/ で検査する。
+- UI から独立したロジック（js/scales.js, js/scoring.js, js/pick.js, js/history.js, js/phrase.js, js/sprite-data.js, js/inflate.js）は DOM に触れない関数にし、tests/ で検査する。
 - 見た目はレトロ RPG 風。低性能端末で動くよう、ぼかし影・半透明・連続的なアニメーションを使わず、動きはコマの切り替え（js/sprites.js の animate）と transform の小さな移動に限る。「点滅・ゆれの演出：なし」では止める。
+- 「ド派手！」モード（画面の色の設定）の演出は js/fx.js、コインの計算は js/inflate.js。コインは表示用で、称号と記録には scoring.js の得点だけを使う。光る演出は 1 秒に 3 回まで。
 - ドット絵のデータは js/sprite-data.js、描画は js/sprites.js。モードの追加手順は docs/design.md の「新しいモードを追加する手順」に従う。
 - 画面の文字は ui.js の h() / phrased() を通して出す（文節の切れ目で改行させるため。textContent に直接入れない）。
 - 尺度は色だけで区別させない（必ず ● ▲ ■ ★ の記号と名前を併記）。本文は UD フォント、ドット文字は見出しのみ。

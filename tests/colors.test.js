@@ -70,3 +70,15 @@ test('レトロ液晶モードの文字色は、明るい2色の背景に対し�
     assert.match(gb, new RegExp(`--${v}:\\s*var\\(--gb3\\)`), `--${v} がいちばん暗い色になっていない`);
   }
 });
+
+test('「ド派手！」モードの文字と尺度の色は、ウインドウの背景に対して読みやすいコントラストがある', () => {
+  const block = css.slice(css.indexOf(':root[data-palette="dopa"] {'));
+  const v = (n) => block.match(new RegExp(`--${n}:\\s*(#[0-9a-fA-F]{6})`))[1];
+  const win = v('win');
+  const lw = luminance(win);
+  for (const hex of [v('fg'), v('fg-dim'), v('gold'), ...Object.values(palette)]) {
+    const [hi, lo] = [luminance(hex), lw].sort((a, b) => b - a);
+    const ratio = (hi + 0.05) / (lo + 0.05);
+    assert.ok(ratio >= MIN_CONTRAST, `${hex} と ${win} のコントラスト比が ${ratio.toFixed(1)} しかない`);
+  }
+});

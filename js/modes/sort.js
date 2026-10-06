@@ -3,6 +3,8 @@ import { SCALE_IDS, SCALES } from '../scales.js';
 import { createSortDeck } from '../pick.js';
 import { SORT_CONFIG, TITLES, summarize } from '../scoring.js';
 import { h, win, button, scaleLabel, mount, verdict, phrased, quitButton } from '../ui.js';
+import { isDopa, stamp, burst, flash, pop, countUp, slot } from '../fx.js';
+import { DOPA_CONFIG, coinGain, formatBig } from '../inflate.js';
 
 const WRONG_LOCK_MS = 300;
 
@@ -50,6 +52,11 @@ export function startSort(ctx, params = {}) {
     let shownAt = 0;
     let locked = false;
     let over = false;
+    // 「ド派手！」モードの状態。コインは演出のための数値で、称号の判定には使わない。
+    const dopa = isDopa();
+    let coins = 0;
+    let lamps = 0;
+    let jackpotUntil = 0;
 
     const bar = h('i');
     const timebar = h('div', { class: 'timebar', role: 'progressbar', 'aria-label': '残り時間' }, bar);
@@ -68,6 +75,7 @@ export function startSort(ctx, params = {}) {
         endAt += now - pausedAt;
         // 止めている間に次のカードが出ていた場合は、再開した時点から回答時間を数える
         shownAt = shownAt > pausedAt ? now : shownAt + (now - pausedAt);
+        if (jackpotUntil) jackpotUntil += now - pausedAt;
         pausedAt = null;
       },
     });
@@ -80,13 +88,25 @@ export function startSort(ctx, params = {}) {
       SCALES[id].name,
       h('span', { class: 'key', 'aria-hidden': 'true' }, `[${n + 1}]`))));
 
-    root.replaceChildren(h('div', { class: 'hud' }, timebar, timeText, scoreText), card, comboText, feedback, boxes);
+    const lampRow = h('p', { class: 'lamps', role: 'img' });
+    const renderLamps = () => {
+      lampRow.setAttribute('aria-label', `FEVER ランプ ${lamps} / ${DOPA_CONFIG.lamps}`);
+      lampRow.replaceChildren(h('span', { class: 'tag' }, 'FEVER'),
+        ...Array.from({ length: DOPA_CONFIG.lamps }, (_, i) => h('span', { class: i < lamps ? 'on' : null }, '●')));
+    };
+    if (dopa) {
+      scoreText.className = 'coin';
+      scoreText.textContent = 'COIN 0';
+      renderLamps();
+    }
+    mount(root, h('div', { class: 'hud' }, timebar, timeText, scoreText), dopa ? lampRow : null, card, comboText, feedback, boxes);
 
     function nextCard() {
       item = deck.next();
       label.replaceChildren(phrased(item.label));
       example.replaceChildren(phrased(`例：${item.example}`));
       hint.replaceChildren(phrased(item.hint ?? ''));
+      if (dopa) pop(label);
       shownAt = performance.now();
       locked = false;
     }
@@ -98,11 +118,12 @@ export function startSort(ctx, params = {}) {
       const before = summarize(answers).score;
       answers.push({ id: item.id, scale: item.scale, chosen: id, correct, elapsedSec });
       const now = summarize(answers);
-      scoreText.textContent = `SCORE ${now.score}`;
       const combo = currentCombo();
       comboText.textContent = combo >= 2 ? `${combo} コンボ！` : '';
+      if (dopa) dopaEffects(correct, combo);
+      else scoreText.textContent = `SCORE ${now.score}`;
       if (correct) {
-        feedback.replaceChildren(verdict('○', `正解 +${now.score - before}`));
+        if (!dopa) feedback.replaceChildren(verdict('○', `正解 +${now.score - before}`));
         nextCard();
       } else {
         feedback.replaceChildren(verdict('×', `${item.label} は `, scaleLabel(item.scale)));
@@ -112,6 +133,36 @@ export function startSort(ctx, params = {}) {
         card.classList.add('shake');
         later(nextCard, WRONG_LOCK_MS);
       }
+    }
+
+    // 「ド派手！」モードの演出。コインを足し、FEVER ランプを点け、7つそろったら JACKPOT にする。
+    function dopaEffects(correct, combo) {
+      if (!correct) {
+        lamps = 0;
+        renderLamps();
+        stamp(feedback, 'ざんねん…', 'bad', { small: true });
+        return;
+      }
+      const t = performance.now();
+      const jackpot = t < jackpotUntil;
+      const gain = coinGain(combo, { jackpot });
+      countUp(scoreText, coins, coins + gain, (v) => `COIN ${formatBig(v)}`);
+      coins += gain;
+      feedback.replaceChildren(verdict('○', `+${formatBig(gain)} COIN`));
+      // 文字とコインはカードと箱のあいだ（feedback）に出し、次の問題の項目名を隠さない
+      stamp(feedback, combo >= 3 ? `${combo} COMBO!!` : '正解!!', 'good', { small: true });
+      burst(feedback, 4 + combo);
+      flash(card);
+      lamps += 1;
+      if (lamps >= DOPA_CONFIG.lamps) {
+        lamps = 0;
+        jackpotUntil = t + DOPA_CONFIG.jackpotSec * 1000;
+        root.classList.add('fever');
+        stamp(feedback, 'JACKPOT FEVER!!', 'jackpot', { small: true });
+        burst(feedback, 12);
+      }
+      renderLamps();
+      if (t < jackpotUntil) comboText.replaceChildren(h('span', { class: 'jackpot-tag' }, `JACKPOT ×${DOPA_CONFIG.jackpotMultiplier}`));
     }
 
     function currentCombo() {
@@ -155,6 +206,10 @@ export function startSort(ctx, params = {}) {
 
     const tick = setInterval(() => {
       if (pausedAt !== null) return;
+      if (jackpotUntil && performance.now() > jackpotUntil) {
+        jackpotUntil = 0;
+        root.classList.remove('fever');
+      }
       const left = Math.max(0, endAt - performance.now()) / 1000;
       bar.style.transform = `scaleX(${left / SORT_CONFIG.timeLimitSec})`;
       timeText.textContent = `TIME ${Math.ceil(left)}`;
@@ -172,20 +227,23 @@ export function startSort(ctx, params = {}) {
       onKey = null;
       for (const b of boxes.querySelectorAll('button')) b.disabled = true;
       feedback.replaceChildren(verdict('', 'そこまで！'));
-      later(() => showResult(answers), 900);
+      root.classList.remove('fever');
+      later(() => showResult(answers, { coins: dopa ? coins : null }), 900);
     }
 
     nextCard();
     timeText.textContent = `TIME ${SORT_CONFIG.timeLimitSec}`;
   }
 
-  function showResult(answers, { save = true, prevBest = history.best('sort') } = {}) {
+  function showResult(answers, { save = true, prevBest = history.best('sort'), coins = null } = {}) {
     const r = summarize(answers);
+    const dopa = isDopa() && coins !== null;
     if (save) history.add({
       mode: 'sort',
       summary: {
         score: r.score, correct: r.correct, total: r.answered, accuracy: r.accuracy,
         perMinute: r.perMinute, avgSec: r.avgSec, maxCombo: r.maxCombo, grade: r.title.grade, title: r.title.title,
+        ...(coins !== null ? { coins } : {}),
       },
       answers,
     });
@@ -197,15 +255,18 @@ export function startSort(ctx, params = {}) {
     const pct = (x) => `${Math.round(x * 100)}%`;
     const stat = (k, v) => h('div', {}, h('small', {}, k), h('b', {}, v));
 
-    mount(root,
-      h('h1', { class: 'head' }, 'STEP 3　結果'),
-      h('section', { class: 'win banner' },
+    const ttl = h('p', { class: 'ttl' }, dopa ? '' : r.title.title);
+    const banner = h('section', { class: 'win banner' },
         h('p', { class: 'grade' }, `称号　${r.title.grade}`),
-        h('p', { class: 'ttl' }, r.title.title),
+        ttl,
         button('称号と階級の説明を見る', () => go('titles', {
           current: r.title.id,
-          back: { name: 'sort', label: '結果にもどる', params: { replay: { answers, prevBest } } },
-        }), { class: 'btn link' })),
+          back: { name: 'sort', label: '結果にもどる', params: { replay: { answers, prevBest, coins } } },
+        }), { class: 'btn link' }));
+    mount(root,
+      h('h1', { class: 'head' }, 'STEP 3　結果'),
+      banner,
+      dopa ? h('p', { class: 'coin', style: 'text-align:center;margin:0 0 8px' }, `獲得コイン ${formatBig(coins)}`) : null,
       r.score > prevBest && prevBest > 0 ? h('p', { class: 'new-best' }, '自己ベスト更新！') : null,
       win('成績', h('div', { class: 'stat-grid' },
         stat('スコア', r.score),
@@ -226,14 +287,18 @@ export function startSort(ctx, params = {}) {
         missedItems.length ? button('まちがえた項目をクイズで復習', () => go('quiz', { items: missedItems })) : null,
         button('メニューにもどる', () => go('title'))));
     root.querySelector('[data-autofocus]').focus({ preventScroll: true });
+    // 「ド派手！」では称号をスロットのように回してから止め、止まったら「ドーン」と出す
+    if (dopa) slot(ttl, r.title.title, () => { stamp(banner, `${r.title.grade}!!`, 'jackpot'); burst(banner, 12); });
   }
 
   const keyHandler = (e) => onKey?.(e);
   document.addEventListener('keydown', keyHandler);
-  if (params.replay) showResult(params.replay.answers, { save: false, prevBest: params.replay.prevBest });
+  if (params.replay) showResult(params.replay.answers, { save: false, prevBest: params.replay.prevBest, coins: params.replay.coins ?? null });
   else showIntro();
   return () => {
     for (const t of timers) { clearTimeout(t); clearInterval(t); }
     document.removeEventListener('keydown', keyHandler);
+    root.classList.remove('fever');
+    document.querySelectorAll('.fx-stamp, .fx-coin').forEach((e) => e.remove());
   };
 }
