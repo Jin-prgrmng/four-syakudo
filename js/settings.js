@@ -11,12 +11,19 @@ export const SETTING_OPTIONS = {
 
 const DEFAULTS = { palette: 'color', font: 'dot', size: 'm', textSpeed: 'fast', motion: 'on' };
 
+// 保存された値のうち、今の選択肢にないもの（なくした設定の値など）は標準の値に戻す。
 export function loadSettings() {
+  let saved = {};
   try {
-    return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(KEY) ?? '{}') };
+    saved = JSON.parse(localStorage.getItem(KEY) ?? '{}');
   } catch {
-    return { ...DEFAULTS };
+    saved = {};
   }
+  const settings = { ...DEFAULTS };
+  for (const [key, def] of Object.entries(SETTING_OPTIONS)) {
+    if (def.options.some(([value]) => value === saved[key])) settings[key] = saved[key];
+  }
+  return settings;
 }
 
 export function saveSettings(settings) {
