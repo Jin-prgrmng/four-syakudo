@@ -46,22 +46,6 @@
   --ratio: var(--gb3);
   color-scheme: light;
 }
-/*
-  「ド派手！」モード。深い紫の背景に金色の枠。尺度の4色はカラーと同じものを使う（どれも背景に対して 5.7:1 以上）。
-  演出（js/fx.js）は .fx-* の要素とクラスで見せる。影はぼかさず、ずらした色で縁取るだけにする。
-*/
-:root[data-palette="dopa"] {
-  --bg: #12001c;
-  --win: #22083a;
-  --fg: #fff6e0;
-  --fg-dim: #e2d0ff;
-  --line: #ffd84a;
-  --focus: #ffd84a;
-  --inner: #ff4fb8;
-  --gold: #ffd84a;
-  --hot: #ff4fb8;
-  --cool: #2ee6ff;
-}
 :root[data-font="ud"] { --font-head: var(--font-ud); }
 :root[data-size="l"] { --base-size: 19px; }
 
@@ -257,11 +241,11 @@ details[open] summary { margin-bottom: 4px; }
 .log-row:first-child { border-top: 0; }
 
 /* 設定・図鑑のタブ */
-.setting { margin-bottom: 8px; }
+.setting { margin-bottom: 12px; }
 .setting .head { margin: 0 0 4px; }
 .setting .opts { display: flex; flex-wrap: wrap; gap: 8px; }
 .setting .opts button {
-  flex: 1 1 90px; min-height: 40px; padding: 4px 8px;
+  flex: 1 1 90px; min-height: 44px; padding: 6px 10px;
   background: transparent; color: var(--fg); border: 2px solid var(--fg-dim); border-radius: 6px; font: inherit; cursor: pointer;
 }
 .setting .opts button[aria-pressed="true"] { border-color: var(--fg); background: var(--fg); color: var(--bg); font-weight: 700; }
@@ -308,67 +292,3 @@ details[open] summary { margin-bottom: 4px; }
 */
 .sprite > g { display: none; }
 .sprite > g.on { display: inline; }
-
-/* ===== 「ド派手！」モードの演出（js/fx.js） ===== */
-:root[data-palette="dopa"] .logo,
-:root[data-palette="dopa"] .banner .ttl,
-:root[data-palette="dopa"] .coin {
-  color: var(--gold);
-  text-shadow: 2px 2px 0 var(--hot), -2px -2px 0 var(--cool);
-}
-:root[data-palette="dopa"] .card .label { text-shadow: 2px 2px 0 var(--hot); }
-:root[data-palette="dopa"] .logo small { text-shadow: none; color: var(--fg-dim); }
-:root[data-palette="dopa"] .hud .coin { text-shadow: 1px 1px 0 var(--hot), -1px -1px 0 var(--cool); }
-:root[data-palette="dopa"] .logo::after {
-  content: "ド派手！"; display: block; font-size: .9rem; color: var(--hot); text-shadow: 1px 1px 0 var(--fg);
-}
-
-/* 大きな文字（正解!!・JACKPOT など）。上から大きく現れて止まる */
-.fx-stamp {
-  position: fixed; z-index: 200; pointer-events: none;
-  transform: translate(-50%, -50%);
-  font-family: var(--font-head); font-size: 2.4rem; line-height: 1.2; white-space: nowrap;
-  color: var(--gold); text-shadow: 3px 3px 0 var(--hot), -3px -3px 0 var(--cool);
-  animation: fx-stamp .32s steps(4, end) both;
-}
-.fx-stamp.bad { color: var(--fg-dim); text-shadow: 3px 3px 0 #000; font-size: 1.8rem; }
-.fx-stamp.small { font-size: 1.7rem; text-shadow: 2px 2px 0 var(--hot), -2px -2px 0 var(--cool); }
-.fx-stamp.bad.small { font-size: 1.4rem; text-shadow: 2px 2px 0 #000; }
-/* JACKPOT は文字が長いので、2行に折り返して画面の幅に収める */
-.fx-stamp.jackpot { white-space: normal; width: 7em; text-align: center; }
-.fx-stamp.jackpot { font-size: 2.1rem; animation: fx-stamp .32s steps(4, end) both, fx-wiggle .5s steps(2) .32s 2; }
-@keyframes fx-stamp {
-  from { transform: translate(-50%, -50%) scale(3) rotate(-10deg); }
-  to { transform: translate(-50%, -50%) scale(1) rotate(-4deg); }
-}
-@keyframes fx-wiggle { 50% { transform: translate(-50%, -50%) scale(1.08) rotate(4deg); } }
-
-/* 飛び散るコイン */
-.fx-coin {
-  position: fixed; z-index: 190; pointer-events: none;
-  color: var(--gold); font-size: 1.3rem; text-shadow: 2px 2px 0 var(--hot);
-  transform: translate(-50%, -50%);
-  animation: fx-coin .6s steps(6, end) forwards;
-}
-@keyframes fx-coin {
-  to { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(.5); }
-}
-
-/* 枠が一瞬光る（js/fx.js が 1 秒に 3 回までに間引く） */
-.fx-flash { animation: fx-flash .3s steps(2, end) 1; }
-@keyframes fx-flash { 0% { border-color: var(--gold); box-shadow: inset 0 0 0 3px var(--win), inset 0 0 0 5px var(--gold), 0 0 0 4px var(--hot); } }
-
-/* 項目名が大きく現れて縮む */
-.fx-pop { display: inline-block; animation: fx-pop .24s steps(3, end) 1; }
-@keyframes fx-pop { from { transform: scale(2.2); } }
-
-/* 60秒仕分けのコインと FEVER ランプ */
-.coin { font-family: var(--font-head); font-size: 1.15rem; }
-.lamps { display: flex; justify-content: center; gap: 6px; margin: -8px 0 10px; font-family: var(--font-head); font-size: .85rem; }
-.lamps span { color: var(--fg-dim); }
-.lamps span.on { color: var(--gold); text-shadow: 1px 1px 0 var(--hot); }
-.lamps .tag { margin-right: 4px; }
-/* JACKPOT 中はカードの枠の色を 0.5 秒ごとに切り替える（1 秒に 2 回で、光過敏の目安の 3 回を下回る） */
-.fever .sort-card { animation: fx-fever 1s steps(2, end) infinite; }
-@keyframes fx-fever { 0% { border-color: var(--gold); } 50% { border-color: var(--hot); } }
-.jackpot-tag { color: var(--hot); }

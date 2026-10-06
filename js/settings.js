@@ -2,7 +2,7 @@
 const KEY = 'four-syakudo:settings:v1';
 
 export const SETTING_OPTIONS = {
-  palette: { label: '画面の色', options: [['color', 'カラー'], ['gb', 'レトロ液晶'], ['dopa', 'ド派手！']] },
+  palette: { label: '画面の色', options: [['color', 'カラー'], ['gb', 'レトロ液晶']] },
   font: { label: '見出しの文字', options: [['dot', 'ドット文字'], ['ud', 'UDフォント']] },
   size: { label: '文字の大きさ', options: [['m', 'ふつう'], ['l', '大きい']] },
   textSpeed: { label: 'メッセージの速さ', options: [['normal', 'ゆっくり'], ['fast', 'はやい'], ['instant', 'すぐ全文']] },
@@ -34,5 +34,5 @@ export function applySettings(settings) {
   root.dataset.font = settings.font;
   root.dataset.size = settings.size;
   root.dataset.motion = settings.motion;
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', ({ gb: '#a0a088', dopa: '#12001c' })[settings.palette] ?? '#0b0f1e');
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', settings.palette === 'gb' ? '#a0a088' : '#0b0f1e');
 }

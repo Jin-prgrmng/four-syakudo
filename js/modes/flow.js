@@ -3,7 +3,6 @@
 import { FLOW_STEPS, SCALE_IDS, SCALES, PICK_HINT, answersForScale, thinkPrompt } from '../scales.js';
 import { shuffle } from '../pick.js';
 import { h, win, button, scaleLabel, messageWindow, verdict, mount, quitButton } from '../ui.js';
-import { celebrate, miss, stamp, flash } from '../fx.js';
 
 const ITEMS_PER_PLAY = 5;
 
@@ -66,15 +65,12 @@ export function startFlow(ctx) {
         const hint = right ? step.wrongHint.whenYes : step.wrongHint.whenNo;
         if (missesHere === 1) memo.say(verdict('×', 'おしい！'), hint);
         else memo.say(verdict('×', `答えは「${yn(right)}」だよ。`), hint);
-        miss(card, 'おしい!!');
         return;
       }
       path.push(`問い${stepIndex + 1} ${yn(yes)}`);
       stepIndex += 1;
       if (!yes || stepIndex === FLOW_STEPS.length) return renderPick();
       memo.say(verdict('○', 'そのとおり！'), thinkPrompt(FLOW_STEPS[stepIndex], item));
-      stamp(card, 'GOOD!!');
-      flash(card);
       renderQuestion();
     }
 
@@ -99,7 +95,6 @@ export function startFlow(ctx) {
         missesHere += 1;
         if (missesHere === 1) memo.say(verdict('×', 'おしい！'), PICK_HINT.first);
         else memo.say(verdict('×', '答えは ', scaleLabel(item.scale), ' だよ。'), PICK_HINT.second);
-        miss(card);
         return;
       }
       finish();
@@ -107,7 +102,6 @@ export function startFlow(ctx) {
 
     function finish() {
       answers.push({ id: item.id, scale: item.scale, chosen: firstPick, correct: mistakes === 0 });
-      celebrate(card, mistakes === 0 ? 'PERFECT!!' : '正解!!');
       const last = index === items.length - 1;
       questionBox.replaceChildren(
         h('p', { class: 'found q-main' }, scaleLabel(item.scale), ' 正解！'),
