@@ -158,7 +158,9 @@ index.html          入口
 css/style.css       レトロ RPG 風の見た目
 js/main.js          画面の切り替え、タイトル・図鑑・設定の画面
 js/ui.js            画面部品（ウインドウ、メニュー、1文字ずつ表示など）
-js/sprites.js       マスコットのドット絵
+js/sprite-data.js   ドット絵のデータ（キャラクターとコマ）
+js/sprites.js       ドット絵の描画とコマの切り替え
+js/phrase.js        文節の切れ目の判定
 js/settings.js      表示の設定
 js/scales.js        尺度の定義とフローチャートの判定
 js/scoring.js       仕分けモードの採点と称号
@@ -169,6 +171,28 @@ data/items.json     問題項目
 tests/              データとロジックの検査
 docs/design.md      この設計書
 ```
+
+## 新しいモードを追加する手順
+
+モードを1つ足すときは、次の場所に手を入れる。既存のモード（`js/modes/quiz.js` など）が手本になる。
+
+| 場所 | すること |
+|---|---|
+| `js/modes/<名前>.js` | `start<名前>(ctx, params)` を書く。`ctx` から `root`（描画先）、`go`（画面の切り替え）、`items`（問題）、`history`（記録）、`settings`（設定）を受け取る。タイマーやキー入力を使ったら、それを止める関数を返す |
+| `js/main.js` | `SCREENS` に画面名と関数を登録し、タイトル画面の `menu([...])` に項目を足す |
+| `js/modes/log.js` | `MODE_NAMES` に、冒険の記録に出す名前を足す（記録を残すモードのみ） |
+| プレイ画面 | 項目カードの先頭に `quitButton({ onQuit: () => go('title') })` を置き、途中でやめられるようにする |
+| 記録 | 終わったら `history.add({ mode: '<名前>', summary, answers })` で保存する。`answers` は項目ごとに `{ id, scale, chosen, correct }` を持たせると、苦手な項目の集計と CSV に自動で載る |
+| 文字 | 画面の文字は `h()` か `phrased()` を通す（文節の切れ目で改行させるため） |
+| 確認 | `npm test` を通し、`npm start` で幅 360px・高さ 640px の画面に収まるかを見る。push の前に `npm run bump` を実行する |
+
+## ドット絵の追加方法
+
+ドット絵のデータは `js/sprite-data.js` の `SPRITES` に、描画と動きは `js/sprites.js` にある。キャラクターを1体足すときは、`SPRITES` に名前、幅と高さ、コマ（1文字が1マスの文字列の配列）を書く。画面では `sprite('<名前>', { frames: ['コマ1', 'コマ2'] })` で SVG を作り、`animate(svg, 間隔ミリ秒)` でコマを順に切り替える。`animate` は「点滅・ゆれの演出：なし」のときは動かさない。
+
+マスの色は文字で指定し、実際の色は `css/style.css` の `.px-<文字>` で決める。こうしておくと、「レトロ液晶」モードでは CSS の側だけで4階調に塗り替えられる。新しい色を使うときは、`PIXEL_COLORS` と `css/style.css` のカラー・レトロ液晶の両方に足す。`tests/sprites.test.js` が、コマの大きさの不ぞろい、未定義の色、CSS にない色を検査する。
+
+演出は、低性能の端末でも重くならないよう、コマの表示・非表示の切り替え（`steps` のような段階的な変化）と、`transform` による小さな移動にとどめる。ぼかし影、半透明の重ね合わせ、連続的に変化するアニメーションは使わない。尺度の区別に色だけを使わないこと、動きを止める設定に従うことは、新しいモードでも守る。
 
 ## 開発の段取り
 

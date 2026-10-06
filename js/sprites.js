@@ -1,43 +1,49 @@
-// ドット絵のマスコット「メモリン」（ものさしの妖精）。1マスを1つの矩形として SVG で描く。
-// 画像ファイルを読み込まないので軽く、拡大してもぼやけない。
-// 色は CSS のクラス（.px-k など）で塗るので、レトロ液晶モードでは CSS 側で色が切り替わる。
-const MEMORIN = [
-  '..kkkkkkkk..',
-  '.kyyyyyyyyk.',
-  '.kykkyyyyyk.',
-  '.kyyyyyyyyk.',
-  '.kykkkyyyyk.',
-  '.kyyyyyyyyk.',
-  '.kywbyywbyk.',
-  '.kywbyywbyk.',
-  '.kpyyyyyypk.',
-  '.kyyykkyyyk.',
-  '.kyyyyyyyyk.',
-  '.kykkyyyyyk.',
-  '.kyyyyyyyyk.',
-  '.kooooooook.',
-  '..kk....kk..',
-  '.kkk....kkk.',
-];
+// ドット絵を SVG で描き、コマを切り替えて動かす。絵のデータは js/sprite-data.js にある。
+// 1マスを1つの矩形として描くので、画像ファイルを読み込まずに済み、拡大してもぼやけない。
+import { SPRITES } from './sprite-data.js';
 
-// 待機モーション用の「かがんだ」コマ。目盛りのない体の下のほう（13行目）を1マス縮め、頭から上が1マス下がる（ひざを曲げたように見える）。
-const MEMORIN_CROUCH = ['............', ...MEMORIN.slice(0, 12), ...MEMORIN.slice(13)];
-
-function frame(rows, cls) {
+function frameGroup(rows, frameName, visible) {
   const rects = [];
   rows.forEach((row, y) => {
     [...row].forEach((c, x) => {
       if (c !== '.') rects.push(`<rect class="px-${c}" x="${x}" y="${y}" width="1" height="1"/>`);
     });
   });
-  return `<g class="${cls}">${rects.join('')}</g>`;
+  return `<g data-frame="${frameName}"${visible ? ' class="on"' : ''}>${rects.join('')}</g>`;
 }
 
-// idle: true で、待機モーション用の2コマ（立ち・かがみ）を持つ SVG を作る。動かすのは js/main.js の startIdle。
-export function memorin(className = 'mascot', { idle = false } = {}) {
-  const a11y = className === 'face' ? 'aria-hidden="true"' : 'role="img" aria-label="マスコットのメモリン"';
-  const frames = idle ? frame(MEMORIN, 'f1') + frame(MEMORIN_CROUCH, 'f2') : frame(MEMORIN, 'f1');
+// キャラクター name の SVG を作る。frames に挙げたコマを持ち、最初のコマだけを表示する。
+// decorative: true なら読み上げ対象から外す（メッセージウインドウの顔など）。
+export function sprite(name, { className = '', frames, decorative = false } = {}) {
+  const s = SPRITES[name];
+  const use = frames ?? [Object.keys(s.frames)[0]];
+  const a11y = decorative ? 'aria-hidden="true"' : `role="img" aria-label="${s.label}"`;
+  const groups = use.map((f, i) => frameGroup(s.frames[f], f, i === 0)).join('');
   const wrap = document.createElement('span');
-  wrap.innerHTML = `<svg class="${className}${idle ? ' idle' : ''}" viewBox="0 0 12 16" shape-rendering="crispEdges" ${a11y}>${frames}</svg>`;
+  wrap.innerHTML = `<svg class="sprite ${className}" viewBox="0 0 ${s.width} ${s.height}" shape-rendering="crispEdges" ${a11y}>${groups}</svg>`;
   return wrap.firstChild;
+}
+
+// SVG が持つコマを intervalMs ごとに順に切り替える。止めるための関数を返す。
+// 設定の「点滅・ゆれの演出」が「なし」のときは動かさない。
+export function animate(svg, intervalMs = 500) {
+  if (document.documentElement.dataset.motion === 'off') return () => {};
+  const groups = [...svg.querySelectorAll('g[data-frame]')];
+  if (groups.length < 2) return () => {};
+  let i = 0;
+  const timer = setInterval(() => {
+    groups[i].classList.remove('on');
+    i = (i + 1) % groups.length;
+    groups[i].classList.add('on');
+  }, intervalMs);
+  return () => clearInterval(timer);
+}
+
+// マスコットのメモリン。idle: true で待機モーション（軽い屈伸）用のコマを持たせる（動かすのは animate）。
+export function memorin(className = 'mascot', { idle = false } = {}) {
+  return sprite('memorin', {
+    className,
+    frames: idle ? SPRITES.memorin.idle : ['stand'],
+    decorative: className === 'face',
+  });
 }

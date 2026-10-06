@@ -3,7 +3,7 @@ import { SCALES, SCALE_IDS, FLOW_STEPS } from './scales.js';
 import { createHistory } from './history.js';
 import { loadSettings, saveSettings, applySettings, SETTING_OPTIONS } from './settings.js';
 import { h, win, menu, button, scaleLabel, enableArrowKeys, mount } from './ui.js';
-import { memorin } from './sprites.js';
+import { memorin, animate } from './sprites.js';
 import { startFlow } from './modes/flow.js';
 import { startQuiz } from './modes/quiz.js';
 import { startSort } from './modes/sort.js';
@@ -46,14 +46,7 @@ document.addEventListener('keydown', (e) => {
 
 const ctx = { root, go, settings, history: createHistory(), items: [], itemsById: new Map() };
 
-// メモリンの待機モーション（軽い屈伸）を始め、止めるための関数を返す。0.5 秒ごとに立ちとかがみを切り替える。
-// 切り替えは .crouch クラスの付け外しだけで、表示は css/style.css が受け持つ。
-function startIdle(svg, intervalMs = 500) {
-  const timer = setInterval(() => svg.classList.toggle('crouch'), intervalMs);
-  return () => clearInterval(timer);
-}
-
-function showTitle({ root, history, settings }) {
+function showTitle({ root, history }) {
   const best = history.best('sort');
   const mascot = memorin('mascot', { idle: true });
   const m = menu([
@@ -71,8 +64,8 @@ function showTitle({ root, history, settings }) {
       h('h1', { class: 'logo' }, '4つの尺度', h('small', {}, 'メモリンと ものさしの冒険'))),
     h('div', { class: 'scale-row', 'aria-hidden': 'true' }, SCALE_IDS.map((id) => scaleLabel(id, { short: true }))),
     win('メニュー', m));
-  // 待機モーションは「点滅・ゆれの演出」の設定だけで止められる（画面を離れると止まる）
-  return settings.motion === 'on' ? startIdle(mascot) : null;
+  // 待機モーション（軽い屈伸）。「点滅・ゆれの演出：なし」では動かない。画面を離れると止まる
+  return animate(mascot);
 }
 
 // 尺度の図鑑。タブで1つずつ表示し、スマートフォンの1画面に収める。

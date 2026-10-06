@@ -287,10 +287,8 @@ details[open] summary { margin-bottom: 4px; }
 .btn.link { width: auto; min-height: 36px; margin: 6px auto 0; padding: 4px 10px; font-size: .85rem; color: var(--fg-dim); text-decoration: underline; }
 
 /*
-  メモリンの待機モーション（タイトル画面）。立ったコマ（.f1）とかがんだコマ（.f2）を、
-  js/main.js の startIdle が 0.5 秒ごとに .crouch クラスを付け外しして切り替える。
-  CSS アニメーションで SVG の表示を切り替える方法はブラウザによって動かないことがあるため、JavaScript で切り替える。
+  ドット絵のコマ。SVG の中の g[data-frame] のうち、.on が付いたコマだけを表示する。
+  js/sprites.js の animate が .on を付け替えてコマを切り替える（タイトル画面のメモリンの待機モーションなど）。
 */
-.idle .f2 { display: none; }
-.idle.crouch .f1 { display: none; }
-.idle.crouch .f2 { display: inline; }
+.sprite > g { display: none; }
+.sprite > g.on { display: inline; }
